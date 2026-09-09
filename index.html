@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Женя Звягин</title>
+    <meta
+      name="description"
+      content="Женя Звягин — делаю бренды частью культуры, руковожу маркетинговыми коммуникациями, читаю лекции в МГУ, играю в теннис, крашу Warhammer."
+    />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#f4f4f7" />
+
+    <link rel="canonical" href="https://vonzvyagin.ru/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://vonzvyagin.ru/" />
+    <meta property="og:title" content="Женя Звягин" />
+    <meta
+      property="og:description"
+      content="Делаю бренды частью культуры, руковожу маркетинговыми коммуникациями, читаю лекции в МГУ, играю в теннис, крашу Warhammer."
+    />
+    <meta property="og:image" content="https://vonzvyagin.ru/portrait.jpg" />
+    <meta name="twitter:card" content="summary" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Spectral:wght@500;600&display=swap"
+    />
+
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f4f7;
+        --ink: #1a1a23;
+        --ink-2: #54545f;
+        --muted: #8b8b98;
+        --accent: #5b5bd6;
+        --line: rgba(20, 20, 45, 0.1);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+        min-height: 100svh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 44px 20px;
+      }
+      main {
+        max-width: 440px;
+        width: 100%;
+        text-align: center;
+        animation: rise 0.45s ease;
+      }
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        main {
+          animation: none;
+        }
+      }
+      .portrait {
+        width: 176px;
+        height: 176px;
+        object-fit: cover;
+        object-position: center 22%;
+        border-radius: 18px;
+        display: block;
+        margin: 0 auto 24px;
+        background: #fff;
+      }
+      h1 {
+        font-family: "Spectral", Georgia, serif;
+        font-weight: 600;
+        font-size: 30px;
+        letter-spacing: -0.01em;
+        margin-bottom: 14px;
+      }
+      .bio {
+        font-size: 15px;
+        line-height: 1.62;
+        color: var(--ink-2);
+        margin-bottom: 22px;
+        text-wrap: pretty;
+      }
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 18px;
+        justify-content: center;
+        font-size: 13.5px;
+        margin-bottom: 26px;
+      }
+      .links a {
+        color: var(--ink-2);
+        text-decoration: none;
+        transition: color 0.15s ease;
+      }
+      .links a:hover {
+        color: var(--accent);
+      }
+      .projects {
+        border-top: 1px solid var(--line);
+        padding-top: 20px;
+        text-align: left;
+      }
+      .projects h2 {
+        font-size: 10.5px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.11em;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .projects ul {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+      }
+      .projects a {
+        display: block;
+        padding: 7px 8px;
+        margin: 0 -8px;
+        font-size: 14px;
+        color: var(--ink);
+        text-decoration: none;
+        border-radius: 8px;
+        transition:
+          background 0.12s ease,
+          color 0.12s ease;
+      }
+      .projects a:hover {
+        background: rgba(20, 20, 45, 0.04);
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img class="portrait" src="portrait.jpg" alt="Женя Звягин" />
+      <h1>Женя Звягин</h1>
+      <p class="bio">
+        Делаю бренды частью культуры, развиваю креативную насмотренность, руковожу маркетинговыми
+        коммуникациями. Играю в теннис, крашу Warhammer, читаю лекции в МГУ, пишу и слушаю музыку.
+      </p>
+      <nav class="links">
+        <a href="https://t.me/digitalissimo" target="_blank" rel="noopener">Телеграм-блог</a>
+        <a href="https://t.me/estogeronium" target="_blank" rel="noopener">Telegram</a>
+        <a href="https://x.com/estogeronium" target="_blank" rel="noopener">X</a>
+        <a href="https://www.linkedin.com/in/zvyagin/" target="_blank" rel="noopener">LinkedIn</a>
+      </nav>
+      <section class="projects">
+        <h2>Проекты</h2>
+        <ul>
+          <li>
+            <a href="https://band.link/yGsLn" target="_blank" rel="noopener">Zvyagin — Watching&nbsp;the&nbsp;Stars&nbsp;—&nbsp;EP</a>
+          </li>
+          <li>
+            <a href="https://unsubscribe.vonzvyagin.ru">«Отписаться» — игра про отмену подписки</a>
+          </li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>
