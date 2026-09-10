@@ -8,6 +8,16 @@
       name="description"
       content="Женя Звягин — делаю бренды частью культуры, руковожу маркетинговыми коммуникациями, читаю лекции в МГУ, играю в теннис, крашу Warhammer."
     />
+
+    <!-- Google Analytics (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3VNVNX5CCX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-3VNVNX5CCX");
+    </script>
+
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <meta name="theme-color" content="#f4f4f7" />
 
@@ -148,6 +158,52 @@
         background: rgba(20, 20, 45, 0.04);
         color: var(--accent);
       }
+      .cookie-nag {
+        position: fixed;
+        left: 50%;
+        bottom: 16px;
+        transform: translateX(-50%);
+        z-index: 100;
+        width: min(430px, calc(100% - 32px));
+        display: none;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        background: var(--ink);
+        color: #fff;
+        border-radius: 12px;
+        font-size: 13px;
+        line-height: 1.4;
+        box-shadow: 0 10px 34px rgba(20, 20, 45, 0.28);
+        animation: cookie-rise 0.35s ease;
+      }
+      @keyframes cookie-rise {
+        from {
+          opacity: 0;
+          transform: translate(-50%, 8px);
+        }
+      }
+      .cookie-nag:not([hidden]) {
+        display: flex;
+      }
+      .cookie-nag p {
+        flex: 1;
+      }
+      .cookie-nag button {
+        flex: none;
+        border: 0;
+        background: #fff;
+        color: var(--ink);
+        font: inherit;
+        font-weight: 500;
+        padding: 6px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+      }
+      .cookie-nag button:hover {
+        background: #e3e3ea;
+      }
     </style>
   </head>
   <body>
@@ -176,5 +232,26 @@
         </ul>
       </section>
     </main>
+
+    <div class="cookie-nag" id="cookieNag" role="note" hidden>
+      <p>Ну собираю я куки. И что ты мне сделаешь?</p>
+      <button type="button" id="cookieOk">ОК</button>
+    </div>
+    <script>
+      (function () {
+        var KEY = "vz-cookie-ack";
+        var nag = document.getElementById("cookieNag");
+        try {
+          if (localStorage.getItem(KEY)) return;
+        } catch (e) {}
+        nag.hidden = false;
+        document.getElementById("cookieOk").addEventListener("click", function () {
+          nag.hidden = true;
+          try {
+            localStorage.setItem(KEY, "1");
+          } catch (e) {}
+        });
+      })();
+    </script>
   </body>
 </html>
