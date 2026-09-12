@@ -158,6 +158,48 @@
         background: rgba(20, 20, 45, 0.04);
         color: var(--accent);
       }
+      .status {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        margin-bottom: 8px;
+      }
+      .status[hidden] {
+        display: none;
+      }
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(20, 20, 45, 0.05);
+        font-size: 13px;
+        color: var(--ink-2);
+      }
+      .status-pill .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--muted);
+        flex: none;
+      }
+      .status-pill[data-level="good"] .dot {
+        background: #3fb27f;
+      }
+      .status-pill[data-level="ok"] .dot {
+        background: #d6a24b;
+      }
+      .status-pill[data-level="bad"] .dot {
+        background: #d6685b;
+      }
+      .status-updated {
+        font-size: 11px;
+        color: var(--muted);
+        text-align: center;
+        margin-bottom: 22px;
+      }
       .cookie-nag {
         position: fixed;
         left: 50%;
@@ -214,6 +256,10 @@
         Делаю бренды частью культуры, развиваю креативную насмотренность, руковожу маркетинговыми
         коммуникациями. Играю в теннис, крашу Warhammer, читаю лекции в МГУ, пишу и слушаю музыку.
       </p>
+      <section class="status" id="fitbitStatus" hidden>
+        <div class="status-pills" id="statusPills"></div>
+      </section>
+      <p class="status-updated" id="statusUpdated" hidden></p>
       <nav class="links">
         <a href="https://t.me/digitalissimo" target="_blank" rel="noopener">Телеграм-блог</a>
         <a href="https://t.me/estogeronium" target="_blank" rel="noopener">Telegram</a>
@@ -251,6 +297,53 @@
             localStorage.setItem(KEY, "1");
           } catch (e) {}
         });
+      })();
+    </script>
+    <script>
+      (function () {
+        // TODO: заменить на реальный URL Worker'а после деплоя (см. worker/README.md)
+        var STATUS_URL = "REPLACE_WITH_WORKER_URL/status.json";
+        if (STATUS_URL.indexOf("REPLACE_WITH") !== -1) return;
+
+        fetch(STATUS_URL, { cache: "no-store" })
+          .then(function (res) {
+            if (!res.ok) throw new Error("bad status");
+            return res.json();
+          })
+          .then(function (data) {
+            if (!data || data.error) return;
+            var pills = document.getElementById("statusPills");
+            ["sleep", "readiness", "energy"].forEach(function (key) {
+              var item = data[key];
+              if (!item) return;
+              var pill = document.createElement("span");
+              pill.className = "status-pill";
+              pill.setAttribute("data-level", item.level || "unknown");
+              var dot = document.createElement("span");
+              dot.className = "dot";
+              pill.appendChild(dot);
+              pill.appendChild(document.createTextNode(item.label));
+              pills.appendChild(pill);
+            });
+            document.getElementById("fitbitStatus").hidden = false;
+            if (data.updatedAt) {
+              var updatedEl = document.getElementById("statusUpdated");
+              updatedEl.textContent = "Обновлено: " + formatRelativeTime(data.updatedAt);
+              updatedEl.hidden = false;
+            }
+          })
+          .catch(function () {
+            // Статус необязателен для страницы — при ошибке просто молчим.
+          });
+
+        function formatRelativeTime(iso) {
+          var diffMin = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+          if (diffMin < 1) return "только что";
+          if (diffMin < 60) return diffMin + " мин назад";
+          var diffHours = Math.round(diffMin / 60);
+          if (diffHours < 24) return diffHours + " ч назад";
+          return Math.round(diffHours / 24) + " дн назад";
+        }
       })();
     </script>
   </body>

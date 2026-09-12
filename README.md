@@ -8,6 +8,9 @@
 - `portrait.jpg` — портрет (1000×1000, ~124 КБ)
 - `favicon.svg`
 - `CNAME` — домен `vonzvyagin.ru` для GitHub Pages
+- `worker/` — Cloudflare Worker, который тянет статус (сон/готовность/энергия)
+  из Google Health API (Fitbit Air) и отдаёт его блоку на главной странице.
+  Деплоится отдельно от Pages, см. `worker/README.md`.
 
 ## Как добавить проект
 

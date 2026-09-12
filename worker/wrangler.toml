@@ -1,0 +1,12 @@
+name = "vonzvyagin-fitbit-status"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Раз в 20 минут + отдельный ранний слот утром (7:10 UTC = 10:10 MSK) для свежих
+# данных о сне сразу после того, как трекер обычно успевает засинкаться.
+[triggers]
+crons = ["10 7 * * *", "*/20 * * * *"]
+
+[[kv_namespaces]]
+binding = "STATUS_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
