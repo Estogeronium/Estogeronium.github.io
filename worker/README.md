@@ -1,92 +1,77 @@
-# vonzvyagin-fitbit-status — деплой
+# vonzvyagin-fitbit-status — деплой (без терминала)
 
-Cloudflare Worker, который раз в 20 минут дёргает Google Health API (данные с
-Fitbit Air), считает 3 статуса и отдаёт их публичным JSON'ом для
-`vonzvyagin.ru`. Ниже — шаги, которые нужно сделать руками (требуют логина в
-твои Google/Cloudflare аккаунты, поэтому их не сделать из этой сессии).
+Всё делается кликами в браузере через Cloudflare Dashboard и Google Cloud
+Console. Терминал не нужен. Разбито на 4 блока — можно делать по одному.
 
-## 1. Google Cloud: проект + OAuth
+## Блок 1. Google Cloud: доступ к твоим данным Fitbit Air
 
-1. https://console.cloud.google.com/ → создать новый проект (например
-   `vonzvyagin-fitbit-status`).
-2. В библиотеке API найти и включить **Google Health API**.
-3. **OAuth consent screen**:
-   - User type: External.
-   - Publishing status: **Testing** (это важно — так не нужен security review
-     для restricted scopes, потому что приложением пользуешься только ты).
-   - В Test users добавь свой Google-аккаунт — тот, что привязан к Fitbit Air.
-   - На шаге Scopes поищи в списке `health` — там должны появиться реальные
-     строки scope'ов Google Health API. Возьми те, что относятся к activity,
-     sleep, heart rate / HRV (readonly-варианты). Точные названия scope'ов я
-     не смог подтвердить из документации (заблокирована в моей сети), поэтому
-     это единственный шаг, где нужно посмотреть глазами и просто выбрать
-     нужное — там будет понятно по описанию.
-4. **Credentials → Create Credentials → OAuth client ID**:
+1. Открой https://console.cloud.google.com/
+2. Вверху слева нажми на выбор проекта → **New Project** → назови как угодно
+   (например `vonzvyagin-status`) → Create.
+3. В поиске сверху введи `Google Health API` → открой → **Enable**.
+4. В левом меню: **APIs & Services → OAuth consent screen**.
+   - User Type: **External** → Create.
+   - Заполни название приложения (любое) и свой email в двух местах, где
+     просит.
+   - Publishing status оставь **Testing**.
+   - На шаге **Test users** добавь свой Google-аккаунт (тот, к которому
+     привязан Fitbit Air).
+   - На шаге **Scopes** нажми Add or Remove Scopes, впиши в фильтр `health` —
+     появится список прав Google Health API. Отметь те, что про
+     activity/sleep/heart rate (readonly-варианты, если есть) — там будет
+     видно по описанию.
+5. **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
    - Application type: **Web application**.
-   - Authorized redirect URI: `https://developers.google.com/oauthplayground`
-   - Сохрани `Client ID` и `Client secret`.
+   - Authorized redirect URIs → Add URI →
+     `https://developers.google.com/oauthplayground`
+   - Create.
+   - Появится окно с **Client ID** и **Client secret** — скопируй оба куда-то
+     во временный текстовый файл, они понадобятся дальше.
 
-## 2. Получить refresh-токен и посмотреть реальный формат ответа
+Готово с этим блоком — напиши мне, и перейдём к следующему.
+
+## Блок 2. Получить refresh-токен (тоже в браузере)
 
 1. Открой https://developers.google.com/oauthplayground/
-2. Шестерёнка (Settings) справа → включи **Use your own OAuth credentials** →
-   вставь Client ID / Client secret из шага 1.
-3. В левой панели найди Google Health API (или вручную впиши scope-строки,
-   которые взял на шаге 1.3) → Authorize APIs → войди тем же Google-аккаунтом,
-   что привязан к Fitbit Air → Allow.
-4. Step 2 → **Exchange authorization code for tokens** → скопируй:
-   - `refresh_token` — long-lived, он пригодится Worker'у.
-   - `access_token` — короткоживущий (~1 час), пригодится для проверки ниже.
-5. Проверь реальные эндпоинты у себя в терминале (замени `ACCESS_TOKEN`):
+2. Справа сверху — иконка шестерёнки → включи **Use your own OAuth
+   credentials** → вставь Client ID и Client secret из блока 1.
+3. В левой колонке впиши вручную нужные scope-строки (те, что видел на шаге
+   консент-скрина) в поле ввода и нажми **Authorize APIs**.
+4. Войди тем же Google-аккаунтом, что привязан к Fitbit Air → Allow.
+5. Нажми **Exchange authorization code for tokens**.
+6. Скопируй `refresh_token` (длинная строка) — он нужен для Блока 3.
 
-   ```bash
-   curl -H "Authorization: Bearer ACCESS_TOKEN" \
-     "https://health.googleapis.com/v4/users/me/sleepSessions?date=$(date +%F)"
+## Блок 3. Cloudflare Worker (создаём и вставляем код через дашборд)
 
-   curl -H "Authorization: Bearer ACCESS_TOKEN" \
-     "https://health.googleapis.com/v4/users/me/readinessScores?date=$(date +%F)"
-   ```
+1. Открой https://dash.cloudflare.com/ → в меню слева **Workers & Pages**.
+2. **Create** → **Workers** → **Create Worker** → дай имя (например
+   `vonzvyagin-fitbit-status`) → Deploy (создастся заглушка, это нормально).
+3. Открой созданный Worker → вкладка **Edit code** (или **Quick edit**).
+4. Сотри весь код-заглушку и вставь содержимое файла `worker/src/index.js` из
+   этого репозитория (я пришлю готовый файл — просто копируешь целиком).
+5. **Save and deploy**.
+6. Настройки Worker'а → **Settings**:
+   - **Variables and Secrets** → добавь 4 штуки, каждую как **Secret**
+     (галочка/переключатель "Encrypt"):
+     - `GOOGLE_CLIENT_ID` — из блока 1
+     - `GOOGLE_CLIENT_SECRET` — из блока 1
+     - `GOOGLE_REFRESH_TOKEN` — из блока 2
+     - `DEBUG_KEY` — придумай любую длинную случайную строку (просто
+       понажимай на клавиатуре)
+   - **Bindings → KV Namespace bindings → Add** → создай новый namespace
+     (например `STATUS_KV`) → variable name должен быть ровно `STATUS_KV`.
+   - **Trigger Events / Cron Triggers → Add Cron Trigger** → добавь:
+     `*/20 * * * *` (каждые 20 минут).
+   - Save.
 
-   Если путь `sleepSessions`/`readinessScores` не тот — Google обычно отдаёт
-   404 с понятным телом ответа. Пришли мне, что вернулось (можно просто текст
-   ошибки, без личных данных) — поправлю `ENDPOINTS` в `src/index.js`.
-   Как только увидим реальный формат ответа — я поправлю и `computeStatus()`.
-   До этого момента Worker будет писать в `debug:lastRaw` то, что реально
-   пришло — этого тоже достаточно для калибровки без ручного curl.
+## Блок 4. Проверка
 
-## 3. Cloudflare: KV + secrets + деплой
-
-```bash
-cd worker
-npm install
-npx wrangler login                     # откроет браузер, залогинься в Cloudflare
-
-npx wrangler kv namespace create STATUS_KV
-# скопируй id из вывода в wrangler.toml → [[kv_namespaces]] → id
-
-npx wrangler secret put GOOGLE_CLIENT_ID
-npx wrangler secret put GOOGLE_CLIENT_SECRET
-npx wrangler secret put GOOGLE_REFRESH_TOKEN
-npx wrangler secret put DEBUG_KEY        # придумай любую длинную случайную строку
-
-npx wrangler deploy
-```
-
-После деплоя Wrangler выведет URL вида
-`https://vonzvyagin-fitbit-status.<твой-субдомен>.workers.dev`.
-
-## 4. Проверка
-
-- `curl https://<worker-url>/status.json` — пока не отработает первый cron,
-  вернёт `503 {"error":"no data yet"}`. Можно руками дёрнуть один раз через
-  `npx wrangler triggers` или просто подождать до 20 минут.
-- `curl "https://<worker-url>/debug?key=ТВОЙ_DEBUG_KEY"` — сырые ответы Google
-  Health API + посчитанный статус. Пришли мне вывод (или структуру полей),
-  если что-то не совпало с ожидаемым — я быстро поправлю парсинг.
-
-## 5. (опционально) свой домен вместо `*.workers.dev`
-
-Cloudflare Dashboard → Workers & Pages → выбрать Worker → Settings → Domains &
-Routes → Add → например `status.vonzvyagin.ru` (у тебя уже DNS на Cloudflare,
-это несколько кликов). Тогда на фронтенде URL будет короче и не будет упоминания
-`workers.dev`.
+1. Открой в браузере: `https://<имя-воркера>.<твой-субдомен>.workers.dev/status.json`
+   — сразу может быть `{"error":"no data yet"}`, это нормально, подожди до 20
+   минут после первого крона (или в дашборде Worker'а есть кнопка "Trigger"
+   для ручного запуска — если есть, нажми её).
+2. Открой `https://<имя-воркера>.<твой-субдомен>.workers.dev/debug?key=ТВОЙ_DEBUG_KEY`
+   — покажет, что реально пришло от Google. Пришли мне этот вывод (текстом
+   или скриншотом) — я поправлю разбор данных под реальный формат ответа.
+3. Пришли мне сам URL воркера (`.../status.json`) — я подставлю его в
+   `index.html` вместо заглушки и опубликую на сайте.
