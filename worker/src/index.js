@@ -107,7 +107,7 @@ async function handleReconnect(request, url, env) {
     authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("response_type", "code");
     authUrl.searchParams.set("access_type", "offline");
-    authUrl.searchParams.set("prompt", "consent");
+    authUrl.searchParams.set("prompt", "select_account consent");
     authUrl.searchParams.set("scope", SCOPES.join(" "));
     authUrl.searchParams.set("state", env.DEBUG_KEY);
     return Response.redirect(authUrl.toString(), 302);
