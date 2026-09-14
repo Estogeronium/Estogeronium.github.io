@@ -159,14 +159,24 @@
         color: var(--accent);
       }
       .status {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        justify-content: center;
         margin-bottom: 8px;
       }
       .status[hidden] {
         display: none;
+      }
+      .status-caption {
+        font-size: 10.5px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.11em;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .status-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
       }
       .status-pill {
         display: inline-flex;
@@ -257,6 +267,7 @@
         коммуникациями. Играю в теннис, крашу Warhammer, читаю лекции в МГУ, пишу и слушаю музыку.
       </p>
       <section class="status" id="fitbitStatus" hidden>
+        <p class="status-caption">Как я сейчас — по данным трекера</p>
         <div class="status-pills" id="statusPills"></div>
       </section>
       <p class="status-updated" id="statusUpdated" hidden></p>

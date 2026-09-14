@@ -31,8 +31,15 @@ const CONFIG = {
   sleepGoodMinutes: 420,
   sleepOkMinutes: 360,
   sleepGoodEfficiency: 85,
-  energy: { goodSteps: 6000, okSteps: 3000 },
+  energy: { dailyGoalSteps: 6000, goodRatio: 0.8, okRatio: 0.4 },
 };
+
+// Локальный часовой пояс (Москва, без перевода часов) — используется, чтобы
+// сравнивать шаги не с полной дневной нормой, а с ожидаемым темпом на текущий
+// час, иначе бейдж будет «На нуле» весь день до вечера.
+const LOCAL_UTC_OFFSET_HOURS = 3;
+const ACTIVE_DAY_START_HOUR = 8;
+const ACTIVE_DAY_END_HOUR = 23;
 
 export default {
   async fetch(request, env) {
@@ -142,12 +149,7 @@ function computeStatus(raw) {
   return {
     sleep: sleepStatus(raw.sleep),
     readiness: readiness(hrv, restingHr),
-    energy: bucket(steps, CONFIG.energy.goodSteps, CONFIG.energy.okSteps, {
-      good: "Энергии много",
-      ok: "Энергия так себе",
-      bad: "На нуле",
-      unknown: "Нет данных об активности",
-    }),
+    energy: energyStatus(steps),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -179,6 +181,10 @@ function sumSteps(rawSteps) {
   let total = 0;
   let found = false;
   for (const point of points) {
+    // Одни и те же шаги иногда прилетают и с самого Fitbit Air, и с телефона
+    // через Apple Health за то же время — считаем только трекер, чтобы не
+    // задваивать.
+    if (pick(point, ["dataSource.platform"]) !== "FITBIT") continue;
     const count = toNumber(pick(point, ["steps.count"]));
     if (count != null) {
       total += count;
@@ -186,6 +192,32 @@ function sumSteps(rawSteps) {
     }
   }
   return found ? total : undefined;
+}
+
+function energyStatus(steps) {
+  if (steps == null) return { label: "Нет данных об активности", level: "unknown" };
+
+  const localHour = getLocalHour();
+  const span = ACTIVE_DAY_END_HOUR - ACTIVE_DAY_START_HOUR;
+  const elapsed = Math.min(Math.max(localHour - ACTIVE_DAY_START_HOUR, 0), span);
+  // Минимум 1 час, чтобы рано утром не делить на что-то около нуля.
+  const expectedByNow = (CONFIG.energy.dailyGoalSteps * Math.max(elapsed, 1)) / span;
+  const ratio = steps / expectedByNow;
+
+  if (steps >= CONFIG.energy.dailyGoalSteps || ratio >= CONFIG.energy.goodRatio) {
+    return { label: "Энергии много", level: "good" };
+  }
+  if (ratio >= CONFIG.energy.okRatio) {
+    return { label: "Энергия так себе", level: "ok" };
+  }
+  return { label: "На нуле", level: "bad" };
+}
+
+function getLocalHour() {
+  const now = new Date();
+  let hour = now.getUTCHours() + now.getUTCMinutes() / 60 + LOCAL_UTC_OFFSET_HOURS;
+  if (hour >= 24) hour -= 24;
+  return hour;
 }
 
 function readiness(hrv, restingHr) {
@@ -197,13 +229,6 @@ function readiness(hrv, restingHr) {
   if (hrvOk && hrOk) return { label: "Готов обсуждать важное", level: "good" };
   if (hrvOk || hrOk) return { label: "Лучше про несрочное", level: "ok" };
   return { label: "Сегодня не до серьёзного", level: "bad" };
-}
-
-function bucket(value, goodThreshold, okThreshold, labels) {
-  if (value == null) return { label: labels.unknown, level: "unknown" };
-  if (value >= goodThreshold) return { label: labels.good, level: "good" };
-  if (value >= okThreshold) return { label: labels.ok, level: "ok" };
-  return { label: labels.bad, level: "bad" };
 }
 
 function jsonResponse(data, status = 200, cors = true) {
