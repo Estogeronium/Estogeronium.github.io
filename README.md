@@ -7,6 +7,7 @@
 - `index.html` — вся страница (стили инлайн)
 - `portrait.jpg` — портрет (1000×1000, ~124 КБ)
 - `favicon.svg`
+- `privacy.html` — политика конфиденциальности (для Google OAuth verification и вообще)
 - `CNAME` — домен `vonzvyagin.ru` для GitHub Pages
 - `worker/` — Cloudflare Worker, который тянет статус (сон/готовность/энергия)
   из Google Health API (Fitbit Air) и отдаёт его блоку на главной странице.

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Политика конфиденциальности — Женя Звягин</title>
+    <meta name="description" content="Как обрабатываются данные на vonzvyagin.ru: аналитика сайта и статус-виджет с данными Fitbit Air / Google Health API." />
+    <meta name="robots" content="noindex" />
+
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#f4f4f7" />
+    <link rel="canonical" href="https://vonzvyagin.ru/privacy.html" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Spectral:wght@500;600&display=swap"
+    />
+
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f4f7;
+        --ink: #1a1a23;
+        --ink-2: #54545f;
+        --muted: #8b8b98;
+        --accent: #5b5bd6;
+        --line: rgba(20, 20, 45, 0.1);
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+        min-height: 100svh;
+        display: flex;
+        justify-content: center;
+        padding: 56px 20px;
+      }
+      main {
+        max-width: 560px;
+        width: 100%;
+      }
+      a {
+        color: var(--accent);
+      }
+      .back {
+        display: inline-block;
+        font-size: 13.5px;
+        color: var(--ink-2);
+        text-decoration: none;
+        margin-bottom: 28px;
+      }
+      .back:hover {
+        color: var(--accent);
+      }
+      h1 {
+        font-family: "Spectral", Georgia, serif;
+        font-weight: 600;
+        font-size: 26px;
+        letter-spacing: -0.01em;
+        margin-bottom: 6px;
+        text-wrap: balance;
+      }
+      .updated {
+        font-size: 12.5px;
+        color: var(--muted);
+        margin-bottom: 32px;
+      }
+      h2 {
+        font-family: "Spectral", Georgia, serif;
+        font-weight: 600;
+        font-size: 17px;
+        margin-top: 30px;
+        margin-bottom: 10px;
+      }
+      p,
+      li {
+        font-size: 14.5px;
+        line-height: 1.65;
+        color: var(--ink-2);
+      }
+      p + p {
+        margin-top: 10px;
+      }
+      ul {
+        margin: 10px 0 0 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      strong {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      footer {
+        margin-top: 44px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        font-size: 13px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="back" href="/">← Женя Звягин</a>
+      <h1>Политика конфиденциальности</h1>
+      <p class="updated">Обновлено: 14 сентября 2026</p>
+
+      <p>
+        Этот сайт — моя личная страница. Данные на нём обрабатываются в двух местах: обычная
+        аналитика посещений и отдельный виджет статуса на главной странице, который показывает
+        три коротких сообщения о том, как я себя чувствую прямо сейчас. Ниже — что именно
+        происходит в каждом случае.
+      </p>
+
+      <h2>Аналитика посещений</h2>
+      <p>
+        Сайт использует Google Analytics (GA4) — стандартный счётчик посещаемости: какие
+        страницы открывают, из какой страны, с какого устройства. Это не привязано к имени
+        или email — просто обезличенная статистика, которую я использую, чтобы понимать,
+        читают ли вообще эту страницу. Данные обрабатывает Google по своей политике
+        конфиденциальности. Отказаться можно в настройках браузера (блокировка cookies или
+        расширение вроде Google Analytics Opt-out).
+      </p>
+
+      <h2>Статус-виджет («Как я сейчас»)</h2>
+      <p>
+        На главной странице есть блок из трёх коротких статусов — про сон, готовность к
+        серьёзным разговорам и физическую активность. Он основан на данных с моего личного
+        трекера Google Fitbit Air и обновляется автоматически.
+      </p>
+      <p><strong>Чьи это данные.</strong> Только мои собственные — из моего аккаунта
+      Google, подключённого через Google Health API. Сайт не запрашивает и не хранит данные
+      посетителей страницы, только мои.</p>
+      <p><strong>Что именно используется.</strong> Данные о сне (длительность, стадии),
+      вариабельности сердечного ритма и пульсе покоя, количестве шагов за день.</p>
+      <p><strong>Как это обрабатывается.</strong> Небольшая серверная программа
+      (Cloudflare Worker) раз в 20 минут запрашивает эти данные через Google Health API,
+      превращает их в одну из трёх коротких качественных меток («Выспался» / «Не выспался»
+      и т. п.) и публикует только эти метки на сайте.</p>
+      <ul>
+        <li>Публично на странице видны только текстовые метки и время последнего
+        обновления — никаких цифр пульса, сна или HRV.</li>
+        <li>Сырые данные, полученные от Google Health API, кратковременно хранятся на
+        сервере для отладки логики подсчёта, доступ к ним закрыт секретным ключом и не
+        публикуется на сайте. Каждый цикл обновления (раз в 20 минут) они перезаписываются
+        новыми.</li>
+        <li>Данные не передаются никаким третьим сторонам, кроме самого Google (источник
+        данных) и Cloudflare (инфраструктура, на которой работает обработка).</li>
+        <li>Данные не используются для рекламы, профилирования или продажи третьим лицам.</li>
+      </ul>
+      <p>
+        Я могу в любой момент отозвать доступ приложения к своему аккаунту Google через
+        <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">
+          страницу разрешений Google Account</a> — тогда виджет просто перестанет
+        обновляться.
+      </p>
+
+      <h2>Контакты</h2>
+      <p>
+        Вопросы по обработке данных — пишите в
+        <a href="https://t.me/estogeronium" target="_blank" rel="noopener">Telegram</a>.
+      </p>
+
+      <footer>vonzvyagin.ru</footer>
+    </main>
+  </body>
+</html>
