@@ -7,6 +7,9 @@
  *
  * Реальный REST-паттерн Google Health API v4:
  *   GET /v4/users/me/dataTypes/{type}/dataPoints
+ * Числовые поля в ответе приходят строками (int64 → JSON string).
+ * "daily-heart-rate-variability" уже содержит и HRV, и nonRemHeartRateBeatsPerMinute
+ * (по сути пульс покоя) — отдельный запрос heart-rate не нужен.
  * Отдельного "readiness"/"cardio load" типа в публичном API нет — готовность
  * считаем сами из HRV + пульса.
  */
@@ -16,7 +19,6 @@ const TOKEN_URL = "https://oauth2.googleapis.com/token";
 
 const ENDPOINTS = {
   sleep: { type: "sleep", pageSize: 3 },
-  heartRate: { type: "heart-rate", pageSize: 200 },
   hrv: { type: "daily-heart-rate-variability", pageSize: 3 },
   steps: { type: "steps", pageSize: 300 },
 };
@@ -114,8 +116,6 @@ async function fetchHealthData(accessToken) {
   return raw;
 }
 
-// Пытается достать значение по нескольким возможным путям в ответе —
-// защита от того, что реальная форма JSON отличается от предположенной.
 function pick(obj, paths) {
   for (const path of paths) {
     const value = path.split(".").reduce((o, k) => (o == null ? undefined : o[k]), obj);
@@ -124,15 +124,20 @@ function pick(obj, paths) {
   return undefined;
 }
 
+function toNumber(value) {
+  if (value == null) return undefined;
+  const n = Number(value);
+  return Number.isNaN(n) ? undefined : n;
+}
+
 function computeStatus(raw) {
-  const hrv = pick(raw.hrv, [
-    "dataPoints.0.rmssdMillis",
-    "dataPoints.0.value.rmssdMillis",
-    "dataPoints.0.heartRateVariability.rmssdMillis",
-    "dataPoints.0.value",
-  ]);
-  const restingHr = extractMinBpm(raw.heartRate);
-  const steps = sumField(raw.steps, ["value", "count", "steps"]);
+  const hrv = toNumber(
+    pick(raw.hrv, ["dataPoints.0.dailyHeartRateVariability.averageHeartRateVariabilityMilliseconds"])
+  );
+  const restingHr = toNumber(
+    pick(raw.hrv, ["dataPoints.0.dailyHeartRateVariability.nonRemHeartRateBeatsPerMinute"])
+  );
+  const steps = sumSteps(raw.steps);
 
   return {
     sleep: sleepStatus(raw.sleep),
@@ -148,12 +153,12 @@ function computeStatus(raw) {
 }
 
 function sleepStatus(rawSleep) {
-  const summary = pick(rawSleep, ["dataPoints.0.summary"]);
+  const summary = pick(rawSleep, ["dataPoints.0.sleep.summary"]);
   if (!summary) return { label: "Нет данных о сне", level: "unknown" };
 
-  const asleep = summary.minutesAsleep;
-  const awake = summary.minutesAwake || 0;
-  const inPeriod = summary.minutesInSleepPeriod || asleep + awake;
+  const asleep = toNumber(summary.minutesAsleep);
+  const awake = toNumber(summary.minutesAwake) || 0;
+  const inPeriod = toNumber(summary.minutesInSleepPeriod) || asleep + awake;
   if (asleep == null) return { label: "Нет данных о сне", level: "unknown" };
 
   const efficiency = inPeriod ? (asleep / inPeriod) * 100 : null;
@@ -168,30 +173,16 @@ function sleepStatus(rawSleep) {
   return { label: "Не выспался", level: "bad" };
 }
 
-function extractMinBpm(rawHeartRate) {
-  const points = pick(rawHeartRate, ["dataPoints"]);
-  if (!Array.isArray(points)) return undefined;
-  let min;
-  for (const point of points) {
-    const bpm = pick(point, ["bpm", "value.bpm", "heartRate.bpm", "value"]);
-    if (typeof bpm === "number" && (min == null || bpm < min)) min = bpm;
-  }
-  return min;
-}
-
-function sumField(rawData, fieldNames) {
-  const points = pick(rawData, ["dataPoints"]);
+function sumSteps(rawSteps) {
+  const points = pick(rawSteps, ["dataPoints"]);
   if (!Array.isArray(points) || points.length === 0) return undefined;
   let total = 0;
   let found = false;
   for (const point of points) {
-    for (const field of fieldNames) {
-      const value = pick(point, [field]);
-      if (typeof value === "number") {
-        total += value;
-        found = true;
-        break;
-      }
+    const count = toNumber(pick(point, ["steps.count"]));
+    if (count != null) {
+      total += count;
+      found = true;
     }
   }
   return found ? total : undefined;
