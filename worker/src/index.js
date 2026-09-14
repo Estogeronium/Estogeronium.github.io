@@ -205,12 +205,12 @@ function energyStatus(steps) {
   const ratio = steps / expectedByNow;
 
   if (steps >= CONFIG.energy.dailyGoalSteps || ratio >= CONFIG.energy.goodRatio) {
-    return { label: "Энергии много", level: "good" };
+    return { label: "На ногах весь день", level: "good" };
   }
   if (ratio >= CONFIG.energy.okRatio) {
-    return { label: "Энергия так себе", level: "ok" };
+    return { label: "Хожу, но не рекорд", level: "ok" };
   }
-  return { label: "На нуле", level: "bad" };
+  return { label: "Почти не вставал из-за стола", level: "bad" };
 }
 
 function getLocalHour() {
