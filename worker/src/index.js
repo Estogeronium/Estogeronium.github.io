@@ -5,36 +5,30 @@
  * считает 3 качественных статуса и кладёт их в KV. Публичный /status.json
  * отдаёт только эти статусы — без сырых чисел пульса/HRV.
  *
- * ВАЖНО: Google Health API запущен в мае 2026, старый Fitbit Web API отключён
- * в сентябре 2026. Точные имена data type'ов ниже (ENDPOINTS) и путей внутри
- * ответа (см. computeStatus) — provisional, взяты по аналогии с REST-паттерном
- * из офдоков (`/v4/users/me/{dataType}`), но не проверены живым вызовом (доступ
- * к developers.google.com заблокирован в текущей рабочей среде). Как только
- * будет реальный ответ API — правим ENDPOINTS и extract*() под факт.
- * Смотри /debug?key=... — там сырые последние ответы, чтобы это можно было
- * поправить без гаданий.
+ * Реальный REST-паттерн Google Health API v4:
+ *   GET /v4/users/me/dataTypes/{type}/dataPoints
+ * Отдельного "readiness"/"cardio load" типа в публичном API нет — готовность
+ * считаем сами из HRV + пульса.
  */
 
-const API_BASE = "https://health.googleapis.com/v4/users/me";
+const API_BASE = "https://health.googleapis.com/v4/users/me/dataTypes";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 
-// Пути данных, которые пробуем вытащить. Каждый — best guess, при ошибке
-// (404/иное) просто пропускаем этот сигнал, остальное не ломаем.
 const ENDPOINTS = {
-  sleep: "sleepSessions",
-  heart: "heartRateSummaries",
-  hrv: "heartRateVariabilitySummaries",
-  readiness: "readinessScores",
-  activity: "activitySummaries",
+  sleep: { type: "sleep", pageSize: 3 },
+  heartRate: { type: "heart-rate", pageSize: 200 },
+  hrv: { type: "daily-heart-rate-variability", pageSize: 3 },
+  steps: { type: "steps", pageSize: 300 },
 };
 
 // Пороги — стартовые, нуждаются в калибровке под личную норму после недели
 // реальных данных (см. /debug).
 const CONFIG = {
-  sleep: { good: 75, ok: 60 },
-  readiness: { good: 70, ok: 45 },
   hrvGoodMs: 40,
   restingHrGoodBpm: 62,
+  sleepGoodMinutes: 420,
+  sleepOkMinutes: 360,
+  sleepGoodEfficiency: 85,
   energy: { goodSteps: 6000, okSteps: 3000 },
 };
 
@@ -54,6 +48,14 @@ export default {
       const raw = await env.STATUS_KV.get("debug:lastRaw", "json");
       const status = await env.STATUS_KV.get("status", "json");
       return jsonResponse({ status, raw }, 200, false);
+    }
+
+    if (url.pathname === "/run-now") {
+      if (url.searchParams.get("key") !== env.DEBUG_KEY) {
+        return new Response("not found", { status: 404 });
+      }
+      await runUpdate(env);
+      return new Response("ok", { status: 200 });
     }
 
     return new Response("not found", { status: 404 });
@@ -96,15 +98,14 @@ async function refreshAccessToken(env) {
 }
 
 async function fetchHealthData(accessToken) {
-  const today = new Date().toISOString().slice(0, 10);
   const raw = {};
 
-  for (const [key, path] of Object.entries(ENDPOINTS)) {
+  for (const [key, { type, pageSize }] of Object.entries(ENDPOINTS)) {
     try {
-      const res = await fetch(`${API_BASE}/${path}?date=${today}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+      const res = await fetch(`${API_BASE}/${type}/dataPoints?pageSize=${pageSize}`, {
+        headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
       });
-      raw[key] = res.ok ? await res.json() : { httpError: res.status };
+      raw[key] = res.ok ? await res.json() : { httpError: res.status, body: await res.text() };
     } catch (err) {
       raw[key] = { fetchError: String(err) };
     }
@@ -124,41 +125,19 @@ function pick(obj, paths) {
 }
 
 function computeStatus(raw) {
-  const sleepScore = pick(raw.sleep, [
-    "sleepSessions.0.score",
-    "sessions.0.score",
-    "0.score",
-  ]);
-  const readinessScore = pick(raw.readiness, [
-    "readinessScores.0.score",
-    "scores.0.score",
-    "0.score",
-  ]);
   const hrv = pick(raw.hrv, [
-    "heartRateVariabilitySummaries.0.rmssdMillis",
-    "summaries.0.rmssdMillis",
-    "0.rmssdMillis",
+    "dataPoints.0.rmssdMillis",
+    "dataPoints.0.value.rmssdMillis",
+    "dataPoints.0.heartRateVariability.rmssdMillis",
+    "dataPoints.0.value",
   ]);
-  const restingHr = pick(raw.heart, [
-    "heartRateSummaries.0.restingHeartRate",
-    "summaries.0.restingHeartRate",
-    "0.restingHeartRate",
-  ]);
-  const steps = pick(raw.activity, [
-    "activitySummaries.0.steps",
-    "summaries.0.steps",
-    "0.steps",
-  ]);
+  const restingHr = extractMinBpm(raw.heartRate);
+  const steps = sumField(raw.steps, ["value", "count", "steps"]);
 
   return {
-    sleep: bucket(sleepScore, CONFIG.sleep, {
-      good: "Выспался",
-      ok: "Так себе выспался",
-      bad: "Не выспался",
-      unknown: "Нет данных о сне",
-    }),
-    readiness: readiness(readinessScore, hrv, restingHr),
-    energy: bucket(steps, CONFIG.energy, {
+    sleep: sleepStatus(raw.sleep),
+    readiness: readiness(hrv, restingHr),
+    energy: bucket(steps, CONFIG.energy.goodSteps, CONFIG.energy.okSteps, {
       good: "Энергии много",
       ok: "Энергия так себе",
       bad: "На нуле",
@@ -168,17 +147,57 @@ function computeStatus(raw) {
   };
 }
 
-function readiness(nativeScore, hrv, restingHr) {
-  if (nativeScore != null) {
-    return bucket(nativeScore, CONFIG.readiness, {
-      good: "Готов обсуждать важное",
-      ok: "Лучше про несрочное",
-      bad: "Сегодня не до серьёзного",
-      unknown: "Нет данных",
-    });
+function sleepStatus(rawSleep) {
+  const summary = pick(rawSleep, ["dataPoints.0.summary"]);
+  if (!summary) return { label: "Нет данных о сне", level: "unknown" };
+
+  const asleep = summary.minutesAsleep;
+  const awake = summary.minutesAwake || 0;
+  const inPeriod = summary.minutesInSleepPeriod || asleep + awake;
+  if (asleep == null) return { label: "Нет данных о сне", level: "unknown" };
+
+  const efficiency = inPeriod ? (asleep / inPeriod) * 100 : null;
+  const efficiencyOk = efficiency == null || efficiency >= CONFIG.sleepGoodEfficiency;
+
+  if (asleep >= CONFIG.sleepGoodMinutes && efficiencyOk) {
+    return { label: "Выспался", level: "good" };
   }
-  // Фолбэк, если нативный readiness не пришёл: HRV выше нормы и resting HR
-  // не задран — считаем, что готов.
+  if (asleep >= CONFIG.sleepOkMinutes) {
+    return { label: "Так себе выспался", level: "ok" };
+  }
+  return { label: "Не выспался", level: "bad" };
+}
+
+function extractMinBpm(rawHeartRate) {
+  const points = pick(rawHeartRate, ["dataPoints"]);
+  if (!Array.isArray(points)) return undefined;
+  let min;
+  for (const point of points) {
+    const bpm = pick(point, ["bpm", "value.bpm", "heartRate.bpm", "value"]);
+    if (typeof bpm === "number" && (min == null || bpm < min)) min = bpm;
+  }
+  return min;
+}
+
+function sumField(rawData, fieldNames) {
+  const points = pick(rawData, ["dataPoints"]);
+  if (!Array.isArray(points) || points.length === 0) return undefined;
+  let total = 0;
+  let found = false;
+  for (const point of points) {
+    for (const field of fieldNames) {
+      const value = pick(point, [field]);
+      if (typeof value === "number") {
+        total += value;
+        found = true;
+        break;
+      }
+    }
+  }
+  return found ? total : undefined;
+}
+
+function readiness(hrv, restingHr) {
   if (hrv == null && restingHr == null) {
     return { label: "Нет данных о готовности", level: "unknown" };
   }
@@ -189,10 +208,10 @@ function readiness(nativeScore, hrv, restingHr) {
   return { label: "Сегодня не до серьёзного", level: "bad" };
 }
 
-function bucket(value, thresholds, labels) {
+function bucket(value, goodThreshold, okThreshold, labels) {
   if (value == null) return { label: labels.unknown, level: "unknown" };
-  if (value >= thresholds.good) return { label: labels.good, level: "good" };
-  if (value >= thresholds.ok) return { label: labels.ok, level: "ok" };
+  if (value >= goodThreshold) return { label: labels.good, level: "good" };
+  if (value >= okThreshold) return { label: labels.ok, level: "ok" };
   return { label: labels.bad, level: "bad" };
 }
 
