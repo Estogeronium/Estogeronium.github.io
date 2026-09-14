@@ -12,10 +12,23 @@
  * (по сути пульс покоя) — отдельный запрос heart-rate не нужен.
  * Отдельного "readiness"/"cardio load" типа в публичном API нет — готовность
  * считаем сами из HRV + пульса.
+ *
+ * Refresh-токен Google живёт 7 дней (приложение в статусе Testing — полная
+ * верификация Google для личных однопользовательских приложений вообще
+ * недоступна, это подтверждено самим Google). /reconnect — эндпоинт для
+ * быстрого переоформления токена в один клик вместо OAuth Playground +
+ * Cloudflare dashboard.
  */
 
 const API_BASE = "https://health.googleapis.com/v4/users/me/dataTypes";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
+const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+
+const SCOPES = [
+  "https://www.googleapis.com/auth/googlehealth.sleep.readonly",
+  "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly",
+  "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+];
 
 const ENDPOINTS = {
   sleep: { type: "sleep", pageSize: 3 },
@@ -67,6 +80,10 @@ export default {
       return new Response("ok", { status: 200 });
     }
 
+    if (url.pathname === "/reconnect") {
+      return handleReconnect(request, url, env);
+    }
+
     return new Response("not found", { status: 404 });
   },
 
@@ -74,6 +91,73 @@ export default {
     ctx.waitUntil(runUpdate(env));
   },
 };
+
+async function handleReconnect(request, url, env) {
+  const redirectUri = `${url.origin}/reconnect`;
+  const code = url.searchParams.get("code");
+  const state = url.searchParams.get("state");
+
+  if (!code) {
+    // Шаг 1: ещё не пришли от Google — проверяем ключ и отправляем на согласие.
+    if (url.searchParams.get("key") !== env.DEBUG_KEY) {
+      return new Response("not found", { status: 404 });
+    }
+    const authUrl = new URL(AUTH_URL);
+    authUrl.searchParams.set("client_id", env.GOOGLE_CLIENT_ID);
+    authUrl.searchParams.set("redirect_uri", redirectUri);
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("access_type", "offline");
+    authUrl.searchParams.set("prompt", "consent");
+    authUrl.searchParams.set("scope", SCOPES.join(" "));
+    authUrl.searchParams.set("state", env.DEBUG_KEY);
+    return Response.redirect(authUrl.toString(), 302);
+  }
+
+  // Шаг 2: вернулись от Google с кодом — state должен совпасть с ключом,
+  // иначе это не наш собственный запрос.
+  if (state !== env.DEBUG_KEY) {
+    return new Response("not found", { status: 404 });
+  }
+
+  const body = new URLSearchParams({
+    code,
+    client_id: env.GOOGLE_CLIENT_ID,
+    client_secret: env.GOOGLE_CLIENT_SECRET,
+    redirect_uri: redirectUri,
+    grant_type: "authorization_code",
+  });
+
+  const res = await fetch(TOKEN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+
+  if (!res.ok) {
+    return new Response(`token exchange failed: ${res.status} ${await res.text()}`, { status: 502 });
+  }
+
+  const data = await res.json();
+  if (!data.refresh_token) {
+    return new Response(
+      "Google didn't return a refresh_token (обычно значит: доступ уже выдавался раньше без force-consent). Попробуй ещё раз.",
+      { status: 502 }
+    );
+  }
+
+  await env.STATUS_KV.put("refreshToken", data.refresh_token);
+  await runUpdate(env);
+
+  return new Response(
+    `<!doctype html><meta charset="utf-8">
+     <body style="font-family:sans-serif;max-width:480px;margin:60px auto;text-align:center">
+       <h1>Готово ✅</h1>
+       <p>Новый токен сохранён, статус обновлён.</p>
+       <p><a href="https://vonzvyagin.ru/">← вернуться на сайт</a></p>
+     </body>`,
+    { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }
+  );
+}
 
 async function runUpdate(env) {
   const accessToken = await refreshAccessToken(env);
@@ -85,10 +169,14 @@ async function runUpdate(env) {
 }
 
 async function refreshAccessToken(env) {
+  // Сначала токен, сохранённый через /reconnect; пока им не пользовались —
+  // падаем обратно на исходный Secret, чтобы переход не сломал текущую работу.
+  const refreshToken = (await env.STATUS_KV.get("refreshToken")) || env.GOOGLE_REFRESH_TOKEN;
+
   const body = new URLSearchParams({
     client_id: env.GOOGLE_CLIENT_ID,
     client_secret: env.GOOGLE_CLIENT_SECRET,
-    refresh_token: env.GOOGLE_REFRESH_TOKEN,
+    refresh_token: refreshToken,
     grant_type: "refresh_token",
   });
 
