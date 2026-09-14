@@ -301,9 +301,7 @@
     </script>
     <script>
       (function () {
-        // TODO: заменить на реальный URL Worker'а после деплоя (см. worker/README.md)
-        var STATUS_URL = "REPLACE_WITH_WORKER_URL/status.json";
-        if (STATUS_URL.indexOf("REPLACE_WITH") !== -1) return;
+        var STATUS_URL = "https://vonzvyagin-fitbit-status.evgenyzv.workers.dev/status.json";
 
         fetch(STATUS_URL, { cache: "no-store" })
           .then(function (res) {
