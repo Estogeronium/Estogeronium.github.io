@@ -1,3 +1,5 @@
 .DS_Store
 worker/node_modules
 worker/.wrangler
+nano-banana-mcp/node_modules
+nano-banana-mcp/.wrangler

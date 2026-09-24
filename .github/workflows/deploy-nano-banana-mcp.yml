@@ -1,0 +1,24 @@
+name: Deploy nano-banana-mcp
+
+on:
+  push:
+    branches: [main]
+    paths: ["nano-banana-mcp/**", ".github/workflows/deploy-nano-banana-mcp.yml"]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: nano-banana-mcp
+          secrets: |
+            GEMINI_API_KEY
+            MCP_TOKEN
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MCP_TOKEN: ${{ secrets.MCP_TOKEN }}

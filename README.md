@@ -31,3 +31,8 @@ Settings → Pages → Source: **Deploy from a branch** → `main` / `/ (root)`.
 DNS (Cloudflare): `CNAME @ → estogeronium.github.io` (grey cloud), `CNAME www → estogeronium.github.io`.
 
 Обновление: правишь `index.html` → коммит + push в GitHub Desktop → сайт пересобирается сам.
+
+## nano-banana-mcp
+
+`nano-banana-mcp/` — MCP-коннектор для Claude, генерирует картинки через
+Nano Banana (Gemini). Деплоится GitHub Actions'ом, см. `nano-banana-mcp/README.md`.

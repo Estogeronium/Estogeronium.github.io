@@ -1,0 +1,10 @@
+name = "nano-banana-mcp"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+# Секреты (задаются из GitHub Actions, см. README):
+#   GEMINI_API_KEY — ключ Google AI Studio
+#   MCP_TOKEN      — случайная строка, часть адреса /mcp/<MCP_TOKEN>
+
+[vars]
+DEFAULT_MODEL = "gemini-3.1-flash-image"
