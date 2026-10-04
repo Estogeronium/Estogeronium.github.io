@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Бренд и креатив 2026 — тренды · Женя Звягин</title>
+    <meta
+      name="description"
+      content="159 трендов из 9 отчётов 2025–2026, сведённых в 16 паттернов и 5 режимов: ИИ, человечность, офлайн, фандомы, метрики бренда. С фильтрами, источниками и выводами."
+    />
+
+    <!-- Google Analytics (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3VNVNX5CCX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-3VNVNX5CCX");
+    </script>
+
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#f4f4f7" />
+    <link rel="canonical" href="https://trends.vonzvyagin.ru/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://trends.vonzvyagin.ru/" />
+    <meta property="og:title" content="Бренд и креатив 2026 — карта трендов" />
+    <meta
+      property="og:description"
+      content="159 трендов из 9 отчётов, 16 паттернов, 5 режимов. Что повторяется, где мнения спорят и что с этим делать."
+    />
+    <meta name="twitter:card" content="summary" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Spectral:wght@500;600&display=swap"
+    />
+
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f4f7;
+        --card: #ffffff;
+        --ink: #1a1a23;
+        --ink-2: #54545f;
+        --muted: #8b8b98;
+        --accent: #5b5bd6;
+        --line: rgba(20, 20, 45, 0.1);
+        --line-2: rgba(20, 20, 45, 0.18);
+        --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+        --serif: "Spectral", Georgia, serif;
+        --sans: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+        --r: 14px;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--sans);
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.5;
+      }
+      a { color: inherit; }
+      button { font: inherit; color: inherit; cursor: pointer; }
+      .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+      .mono { font-family: var(--mono); }
+      .label {
+        font-family: var(--mono);
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+      }
+
+      /* top bar */
+      .top {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 18px 0; border-bottom: 1px solid var(--line);
+      }
+      .top a { text-decoration: none; transition: color 0.15s; }
+      .top a:hover { color: var(--accent); }
+      .top .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #ff5b24; margin-right: 8px; }
+
+      /* hero */
+      .hero { padding: 56px 0 36px; display: grid; grid-template-columns: 1.25fr 1fr; gap: 40px; align-items: center; }
+      .hero h1 {
+        font-family: var(--serif); font-weight: 600; font-size: clamp(38px, 6vw, 68px);
+        line-height: 1.02; letter-spacing: -0.02em; margin: 14px 0 18px; text-wrap: balance;
+      }
+      .hero p { color: var(--ink-2); font-size: 16px; max-width: 520px; text-wrap: pretty; }
+      .hero .meta { margin-top: 18px; display: flex; gap: 10px 22px; flex-wrap: wrap; }
+      .panel {
+        background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px;
+        box-shadow: 0 1px 0 rgba(20,20,45,0.04), 0 12px 30px -18px rgba(20,20,45,0.25);
+      }
+      .lcd { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+      .lcd div { background: #14141b; color: #e8e8ee; border-radius: 10px; padding: 10px 12px; }
+      .lcd b { display: block; font-family: var(--mono); font-weight: 500; font-size: 28px; line-height: 1.1; letter-spacing: -0.02em; color: #9dffb9; }
+      .lcd span { font-family: var(--mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.1em; color: #8a8a99; }
+      .pads { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .pad {
+        aspect-ratio: 1; border: 1px solid var(--line-2); border-radius: 12px; background: #fafafc;
+        display: flex; align-items: center; justify-content: center; position: relative; text-decoration: none;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s;
+        box-shadow: 0 2px 0 rgba(20,20,45,0.12);
+      }
+      .pad:hover { background: #fff; transform: translateY(-1px); box-shadow: 0 3px 0 rgba(20,20,45,0.16); }
+      .pad:active { transform: translateY(1px); box-shadow: 0 0 0 rgba(0,0,0,0); }
+      .pad i { position: absolute; left: 7px; top: 5px; font-style: normal; font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
+      .pad svg { width: 62%; height: 62%; }
+
+      /* section heads */
+      section { padding: 44px 0 8px; }
+      .sh { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+      .sh h2 { font-family: var(--serif); font-weight: 600; font-size: clamp(24px, 3.4vw, 34px); letter-spacing: -0.01em; }
+      .sh p { color: var(--ink-2); font-size: 14.5px; max-width: 560px; }
+
+      /* bento map */
+      .bento { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; grid-auto-flow: dense; grid-auto-rows: minmax(140px, auto); }
+      .tile {
+        position: relative; background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+        padding: 14px; display: flex; flex-direction: column; justify-content: space-between; text-decoration: none;
+        overflow: hidden; transition: transform 0.15s ease, border-color 0.15s ease;
+      }
+      .tile::before { content: ""; position: absolute; left: 0; top: 0; right: 0; height: 4px; background: var(--gc); }
+      .tile:hover { transform: translateY(-2px); border-color: var(--line-2); }
+      .tile.l { grid-column: span 2; grid-row: span 2; }
+      .tile .row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+      .tile svg.g { width: 38px; height: 38px; flex: none; }
+      .tile.l svg.g { width: 64px; height: 64px; }
+      .tile h3 { font-size: 14.5px; font-weight: 600; letter-spacing: -0.005em; line-height: 1.25; margin-top: 10px; text-wrap: balance; }
+      .tile.l h3 { font-family: var(--serif); font-size: 24px; font-weight: 600; line-height: 1.12; }
+      .tile .ln { font-size: 13px; color: var(--ink-2); margin-top: 8px; display: none; text-wrap: pretty; }
+      .tile.l .ln { display: block; }
+      .tile .ft { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; gap: 8px; }
+      .tile .n { font-family: var(--mono); font-size: 11px; color: var(--ink-2); }
+      .tile.info { background: transparent; border-style: dashed; justify-content: center; }
+      .tile.info::before { display: none; }
+      .tile.info p { font-size: 13px; color: var(--ink-2); }
+      .tile.info b { font-weight: 500; color: var(--ink); }
+      .meter { display: inline-flex; gap: 2px; vertical-align: middle; }
+      .meter s { display: block; width: 5px; height: 11px; border-radius: 1.5px; background: rgba(20,20,45,0.1); text-decoration: none; }
+      .meter s.on { background: var(--gc, var(--ink)); }
+
+      /* filters */
+      .fbar { position: sticky; top: 0; z-index: 20; background: rgba(244,244,247,0.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); margin: 28px 0 0; }
+      .fbar .in { padding: 10px 0; display: flex; flex-direction: column; gap: 8px; }
+      .frow { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+      .frow .label { width: 74px; flex: none; }
+      .chip {
+        font-size: 12.5px; padding: 4px 10px; border-radius: 999px; background: var(--card); border: 1px solid var(--line-2);
+        transition: background 0.12s, color 0.12s, border-color 0.12s; white-space: nowrap;
+      }
+      .chip:hover { border-color: var(--ink-2); }
+      .chip[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+      .chip .c { font-family: var(--mono); font-size: 10.5px; opacity: 0.6; margin-left: 5px; }
+      .search { flex: 1; min-width: 160px; max-width: 320px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-2); background: var(--card); font: inherit; font-size: 13px; outline: none; }
+      .search:focus { border-color: var(--accent); }
+      .fcount { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: auto; }
+      .reset { font-size: 12px; color: var(--accent); background: none; border: 0; text-decoration: underline; text-underline-offset: 3px; }
+      .fextra { display: none; flex-direction: column; gap: 8px; }
+      .fbar.open .fextra { display: flex; }
+
+      /* cluster sections */
+      .cl { padding: 40px 0 6px; border-top: 1px solid var(--line); margin-top: 8px; }
+      .cl:first-of-type { border-top: 0; }
+      .clh { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: start; margin-bottom: 16px; }
+      .clh svg { width: 56px; height: 56px; }
+      .clh .code { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+      .clh h3 { font-family: var(--serif); font-weight: 600; font-size: clamp(22px, 3vw, 30px); line-height: 1.12; letter-spacing: -0.01em; margin: 3px 0 6px; text-wrap: balance; }
+      .clh p { color: var(--ink-2); font-size: 15px; max-width: 640px; text-wrap: pretty; }
+      .clh .sig { text-align: right; }
+      .clh .sig .label { display: block; margin-bottom: 5px; }
+      .act { display: flex; gap: 10px; align-items: flex-start; background: var(--card); border: 1px dashed var(--line-2); border-radius: 10px; padding: 9px 12px; font-size: 13px; color: var(--ink-2); margin-bottom: 14px; max-width: 760px; }
+      .act b { font-family: var(--mono); font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); padding-top: 2px; flex: none; }
+      .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; }
+      .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+      .card h4 { font-size: 14.5px; font-weight: 600; line-height: 1.3; letter-spacing: -0.005em; text-wrap: balance; }
+      .card p { font-size: 13.5px; color: var(--ink-2); text-wrap: pretty; }
+      .card .ev { font-size: 12.5px; background: #f7f7fa; border-left: 3px solid var(--gc); border-radius: 4px 8px 8px 4px; padding: 7px 10px; color: var(--ink); }
+      .card .ev span { display: block; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+      .card .foot { margin-top: auto; padding-top: 6px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+      .src { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.02em; background: #ececf2; border-radius: 5px; padding: 2px 6px; }
+      .hz { display: inline-flex; gap: 3px; align-items: center; font-family: var(--mono); font-size: 10px; color: var(--muted); }
+      .hz i { width: 6px; height: 6px; border-radius: 50%; background: rgba(20,20,45,0.14); }
+      .hz i.on { background: var(--ink); }
+      .st { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+      .tags { display: flex; gap: 4px; flex-wrap: wrap; }
+      .tag { font-size: 11px; color: var(--ink-2); border: 1px solid var(--line-2); border-radius: 4px; padding: 0 5px; background: transparent; }
+      .tag:hover { border-color: var(--ink-2); }
+      .more { margin-top: 10px; background: none; border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 14px; font-size: 13px; }
+      .more:hover { border-color: var(--ink); }
+      .empty { padding: 60px 0; text-align: center; color: var(--ink-2); display: none; }
+
+      /* tensions */
+      .tens { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 10px; }
+      .tn { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; }
+      .tn h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+      .poles { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+      .pole { text-align: left; text-decoration: none; padding: 4px 0; transition: opacity 0.15s; display: block; }
+      .pole:hover b { text-decoration: underline; text-underline-offset: 3px; }
+      .pole.r { text-align: right; }
+      .pole b { display: block; font-size: 13px; font-weight: 600; }
+      .pole span { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+      .knob { width: 120px; }
+      input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 24px; background: transparent; cursor: ew-resize; }
+      input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: repeating-linear-gradient(90deg, rgba(20,20,45,0.22) 0 1px, transparent 1px 8px); background-color: rgba(20,20,45,0.06); }
+      input[type="range"]::-moz-range-track { height: 6px; border-radius: 3px; background: repeating-linear-gradient(90deg, rgba(20,20,45,0.22) 0 1px, transparent 1px 8px); background-color: rgba(20,20,45,0.06); }
+      input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8px; border-radius: 50%; background: #ff5b24; border: 3px solid #fff; box-shadow: 0 0 0 1px var(--line-2), 0 3px 6px rgba(20,20,45,0.25); }
+      input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: #ff5b24; border: 3px solid #fff; box-shadow: 0 0 0 1px var(--line-2), 0 3px 6px rgba(20,20,45,0.25); }
+      input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 6px; }
+      .tn p { margin-top: 12px; font-size: 13.5px; color: var(--ink-2); text-wrap: pretty; }
+      .tn .read { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-align: center; margin-top: 4px; min-height: 14px; }
+
+      /* actions */
+      .acts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
+      .ag { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; }
+      .ag h3 { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+      .ag h3 i { width: 10px; height: 10px; border-radius: 3px; background: var(--gc); display: inline-block; }
+      .ag label { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; color: var(--ink-2); padding: 6px 0; border-top: 1px solid var(--line); cursor: pointer; }
+      .ag label:first-of-type { border-top: 0; }
+      .ag input { accent-color: var(--ink); margin-top: 3px; flex: none; }
+      .ag input:checked + span { color: var(--muted); text-decoration: line-through; }
+      .ag em { font-style: normal; font-family: var(--mono); font-size: 10px; color: var(--muted); display: block; }
+
+      /* about */
+      .about { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .box { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; font-size: 13.5px; color: var(--ink-2); }
+      .box h3 { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+      .box ul { list-style: none; display: grid; gap: 4px; }
+      .box li::before { content: "—  "; color: var(--muted); }
+      .box li { text-wrap: pretty; }
+      footer { padding: 36px 0 56px; margin-top: 30px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+      footer a { text-decoration: none; border-bottom: 1px solid var(--line-2); }
+      footer a:hover { color: var(--accent); border-color: var(--accent); }
+
+      @media (max-width: 900px) {
+        .hero { grid-template-columns: 1fr; gap: 28px; padding-top: 36px; }
+        .bento { grid-template-columns: repeat(2, 1fr); }
+        .tile.l { grid-column: span 2; grid-row: span 1; }
+        .tile.l svg.g { width: 48px; height: 48px; }
+        .about { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 600px) {
+        .wrap { padding: 0 16px; }
+        .frow .label { width: 100%; }
+        .clh { grid-template-columns: auto 1fr; }
+        .clh .sig { grid-column: 1 / -1; text-align: left; }
+        .poles { grid-template-columns: 1fr 1fr; }
+        .knob { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+        .tens { grid-template-columns: 1fr; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { transition: none !important; animation: none !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <a class="label" href="https://vonzvyagin.ru/"><span class="dot"></span>vonzvyagin.ru</a>
+        <span class="label">trends / 26 / brand &amp; creative</span>
+      </div>
+
+      <header class="hero">
+        <div>
+          <span class="label">Карта трендов · обновлено <span id="upd"></span></span>
+          <h1>Бренд и креатив&nbsp;2026</h1>
+          <p>
+            Девять свежих отчётов, сведённых в одну карту: что повторяется у независимых авторов, где они спорят и
+            что с этим делать. Не пересказ, а паттерны.
+          </p>
+          <div class="meta">
+            <a class="label" href="#map">карта ↓</a>
+            <a class="label" href="#tensions">напряжения ↓</a>
+            <a class="label" href="#actions">что делать ↓</a>
+            <a class="label" href="#about">источники ↓</a>
+          </div>
+        </div>
+        <div class="panel" aria-label="Сводка">
+          <div class="lcd">
+            <div><b id="s-t">0</b><span>трендов</span></div>
+            <div><b id="s-s">0</b><span>отчётов</span></div>
+            <div><b id="s-c">0</b><span>паттернов</span></div>
+          </div>
+          <div class="pads" id="pads"></div>
+        </div>
+      </header>
+
+      <section id="map">
+        <div class="sh">
+          <h2>16 паттернов в пяти режимах</h2>
+          <p>
+            Размер плитки — число трендов в паттерне. Шкала внизу — сколько из девяти отчётов видят то же самое: чем
+            длиннее, тем надёжнее сигнал.
+          </p>
+        </div>
+        <div class="bento" id="bento"></div>
+      </section>
+
+      <div class="fbar" id="fbar">
+        <div class="in">
+          <div class="frow">
+            <span class="label">Режим</span><span id="f-group" class="frow" style="display:contents"></span>
+            <button class="chip ftoggle" id="ftoggle" type="button">Ещё фильтры ▾</button>
+          </div>
+          <div class="fextra">
+            <div class="frow"><span class="label">Горизонт</span><span id="f-hz" style="display:contents"></span></div>
+            <div class="frow"><span class="label">Позиция</span><span id="f-st" style="display:contents"></span></div>
+            <div class="frow"><span class="label">Отчёт</span><span id="f-src" style="display:contents"></span></div>
+            <div class="frow"><span class="label">Теги</span><span id="f-tag" style="display:contents"></span></div>
+          </div>
+          <div class="frow">
+            <input class="search" id="q" type="search" placeholder="Поиск по трендам" aria-label="Поиск по трендам" />
+            <button class="reset" id="reset" type="button" hidden>сбросить</button>
+            <span class="fcount" id="fcount"></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="clusters"></div>
+      <div class="empty" id="empty">
+        <p>Ничего не нашлось. Попробуйте убрать фильтр.</p>
+      </div>
+
+      <section id="tensions">
+        <div class="sh">
+          <h2>Где тренды спорят друг с другом</h2>
+          <p>Самое интересное лежит на стыках. Двигайте ручку: каждая пара — это выбор, который придётся делать брендам в 2026.</p>
+        </div>
+        <div class="tens" id="tens"></div>
+      </section>
+
+      <section id="actions">
+        <div class="sh">
+          <h2>Что делать в понедельник</h2>
+          <p>Короткий список по каждому паттерну. Это редакторский вывод, не цитаты отчётов. Отмечайте сделанное — галочки сохраняются у вас в браузере.</p>
+        </div>
+        <div class="acts" id="acts"></div>
+      </section>
+
+      <section id="about">
+        <div class="sh"><h2>Источники и метод</h2></div>
+        <div class="about">
+          <div class="box">
+            <h3>Откуда данные</h3>
+            <ul id="srclist"></ul>
+          </div>
+          <div class="box">
+            <h3>Как это сделано и что учесть</h3>
+            <ul>
+              <li>Из каждого отчёта выписаны все самостоятельные тренды и вывод авторов, затем сведены в паттерны.</li>
+              <li>Тексты — пересказ. Цифры и кейсы взяты из отчётов; номера страниц приблизительные.</li>
+              <li>Сила сигнала — число независимых отчётов, где виден паттерн. Один отчёт — ещё не тренд.</li>
+              <li>Пять PDF не прочитаны: в них нет текстового слоя, они не учтены. Выводы по паттернам могут измениться.</li>
+              <li>Названия паттернов, выводы и «что делать» — авторская редакция, а не позиция исследователей.</li>
+              <li>Это пилотная часть большой подборки; другие разделы подключаются по мере разбора.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <span>
+          Основа — открытая подборка трендов ACIG: Iolanda Carvalho, Ci En Lee, Amy Daroukakis, Gonzalo Gregori. Права на
+          исходные отчёты принадлежат их авторам.
+        </span>
+        <span><a href="https://vonzvyagin.ru/">Женя Звягин</a></span>
+      </footer>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+      (function () {
+        var D = window.TRENDS_DATA;
+        var G = {}, C = {};
+        D.groups.forEach(function (g) { G[g.id] = g; });
+        D.clusters.forEach(function (c) { C[c.id] = c; });
+        var HZ = { now: "сейчас", "2026": "2026", "2027+": "2027+" };
+        var HZI = { now: 1, "2026": 2, "2027+": 3 };
+        var ST = { growth: "▲ растёт", decline: "▼ спадает", tension: "↔ спор", neutral: "● нейтрально", unclear: "● неясно" };
+        var TOP = 6;
+
+        function $(id) { return document.getElementById(id); }
+        function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+        function esc(s) { return String(s).replace(/[&<>"]/g, function (m) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]; }); }
+        function pad(n) { return n < 10 ? "0" + n : "" + n; }
+        function plural(n, a, b, c) { var m = n % 100, d = n % 10; if (m > 10 && m < 20) return c; if (d === 1) return a; if (d > 1 && d < 5) return b; return c; }
+
+        // ---------- micrographics ----------
+        function glyph(c, cls) {
+          var col = G[c.g].color, ink = "#1a1a23", out = "";
+          for (var i = 0; i < 9; i++) {
+            var ch = c.glyph.charAt(i), x = (i % 3) * 12, y = Math.floor(i / 3) * 12, cx = x + 6, cy = y + 6;
+            if (ch === "o") out += '<circle cx="' + cx + '" cy="' + cy + '" r="3.2" fill="' + col + '"/>';
+            else if (ch === "O") out += '<circle cx="' + cx + '" cy="' + cy + '" r="5.2" fill="' + ink + '"/>';
+            else if (ch === "s") out += '<rect x="' + (x + 2.5) + '" y="' + (y + 2.5) + '" width="7" height="7" rx="1.2" fill="' + col + '"/>';
+            else if (ch === "t") out += '<path d="M' + cx + " " + (y + 2) + "L" + (x + 10) + " " + (y + 10) + "L" + (x + 2) + " " + (y + 10) + 'Z" fill="' + col + '"/>';
+            else if (ch === "h") out += '<path d="M' + (x + 1.5) + " " + (y + 8) + "A4.5 4.5 0 0 1 " + (x + 10.5) + " " + (y + 8) + 'Z" fill="' + ink + '"/>';
+            else if (ch === "x") out += '<path d="M' + (x + 3) + " " + (y + 3) + "L" + (x + 9) + " " + (y + 9) + "M" + (x + 9) + " " + (y + 3) + "L" + (x + 3) + " " + (y + 9) + '" stroke="' + ink + '" stroke-width="1.6" stroke-linecap="round"/>';
+          }
+          return '<svg class="' + (cls || "g") + '" viewBox="0 0 36 36" aria-hidden="true">' + out + "</svg>";
+        }
+        function meter(n) {
+          var s = ""; for (var i = 0; i < 9; i++) s += '<s class="' + (i < n ? "on" : "") + '"></s>';
+          return '<span class="meter" role="img" aria-label="Источников: ' + n + ' из 9">' + s + "</span>";
+        }
+        function hz(h) {
+          var n = HZI[h] || 1, s = "";
+          for (var i = 0; i < 3; i++) s += '<i class="' + (i < n ? "on" : "") + '"></i>';
+          return '<span class="hz" title="Горизонт: ' + esc(HZ[h] || h) + '">' + s + "&nbsp;" + esc(HZ[h] || h) + "</span>";
+        }
+
+        // ---------- hero ----------
+        $("upd").textContent = D.updated;
+        $("s-t").textContent = D.stats.trends; $("s-s").textContent = D.stats.sources; $("s-c").textContent = D.stats.clusters;
+        D.clusters.forEach(function (c) {
+          var a = el("a", "pad", '<i>' + pad(c.n) + "</i>" + glyph(c));
+          a.href = "#c-" + c.id; a.title = c.name; a.setAttribute("aria-label", c.name);
+          $("pads").appendChild(a);
+        });
+
+        // ---------- bento ----------
+        D.clusters.forEach(function (c, i) {
+          var large = c.count >= 13;
+          var a = el("a", "tile" + (large ? " l" : ""));
+          a.href = "#c-" + c.id; a.style.setProperty("--gc", G[c.g].color);
+          a.innerHTML =
+            '<div><div class="row">' + glyph(c) + '<span class="label">' + pad(c.n) + " · " + esc(G[c.g].name) + "</span></div>" +
+            "<h3>" + esc(c.name) + '</h3><p class="ln">' + esc(c.line) + "</p></div>" +
+            '<div class="ft"><span class="n">' + c.count + " " + plural(c.count, "тренд", "тренда", "трендов") + "</span>" +
+            '<span style="--gc:' + G[c.g].color + '">' + meter(c.sources.length) + "</span></div>";
+          $("bento").appendChild(a);
+          if (i === 3) {
+            var t = el("div", "tile info", '<p><b>Как читать.</b> Цвет — режим, фигуры — фирменный знак паттерна, шкала — сколько отчётов видят то же самое.</p>');
+            $("bento").appendChild(t);
+          }
+        });
+        $("bento").appendChild(el("div", "tile info", '<p><b>Режимы:</b> ' + D.groups.map(function (g) { return '<span style="color:' + g.color + '">■</span>&nbsp;' + esc(g.name); }).join(" · ") + "</p>"));
+
+        // ---------- filters ----------
+        var S = { g: null, hz: {}, st: {}, src: {}, tag: {}, q: "" };
+        var expanded = {};
+
+        function chip(host, label, count, on, fn) {
+          var b = el("button", "chip", esc(label) + (count != null ? '<span class="c">' + count + "</span>" : ""));
+          b.type = "button"; b.setAttribute("aria-pressed", on ? "true" : "false"); b.onclick = fn;
+          host.appendChild(b); return b;
+        }
+        function count(fn) { return D.trends.filter(fn).length; }
+
+        function buildFilters() {
+          var h = $("f-group"); h.innerHTML = "";
+          D.groups.forEach(function (g) {
+            chip(h, g.name, count(function (t) { return C[t.c].g === g.id; }), S.g === g.id, function () { S.g = S.g === g.id ? null : g.id; update(); });
+          });
+          var hh = $("f-hz"); hh.innerHTML = "";
+          ["now", "2026", "2027+"].forEach(function (k) {
+            chip(hh, HZ[k], count(function (t) { return t.h === k; }), !!S.hz[k], function () { S.hz[k] = !S.hz[k]; update(); });
+          });
+          var ss = $("f-st"); ss.innerHTML = "";
+          ["growth", "tension", "decline"].forEach(function (k) {
+            chip(ss, ST[k], count(function (t) { return t.st === k; }), !!S.st[k], function () { S.st[k] = !S.st[k]; update(); });
+          });
+          var sr = $("f-src"); sr.innerHTML = "";
+          D.sources.forEach(function (k) {
+            chip(sr, k, count(function (t) { return t.s === k; }), !!S.src[k], function () { S.src[k] = !S.src[k]; update(); });
+          });
+          var tg = $("f-tag"); tg.innerHTML = "";
+          var cnt = {}; D.trends.forEach(function (t) { t.tg.forEach(function (x) { cnt[x] = (cnt[x] || 0) + 1; }); });
+          Object.keys(cnt).filter(function (k) { return cnt[k] >= 4; }).sort(function (a, b) { return cnt[b] - cnt[a]; }).forEach(function (k) {
+            chip(tg, k, cnt[k], !!S.tag[k], function () { S.tag[k] = !S.tag[k]; update(); });
+          });
+        }
+
+        function any(o) { return Object.keys(o).some(function (k) { return o[k]; }); }
+        function on(o) { return Object.keys(o).filter(function (k) { return o[k]; }); }
+        function match(t) {
+          if (S.g && C[t.c].g !== S.g) return false;
+          if (any(S.hz) && !S.hz[t.h]) return false;
+          if (any(S.st) && !S.st[t.st]) return false;
+          if (any(S.src) && !S.src[t.s]) return false;
+          if (any(S.tag) && !on(S.tag).every(function (k) { return t.tg.indexOf(k) > -1; })) return false;
+          if (S.q) {
+            var hay = (t.t + " " + t.d + " " + t.e + " " + t.tg.join(" ") + " " + t.s).toLowerCase();
+            if (hay.indexOf(S.q) < 0) return false;
+          }
+          return true;
+        }
+        function filtered() { return S.g || any(S.hz) || any(S.st) || any(S.src) || any(S.tag) || S.q; }
+
+        // ---------- cluster sections ----------
+        function card(t) {
+          var c = C[t.c], a = el("article", "card"); a.style.setProperty("--gc", G[c.g].color);
+          a.innerHTML =
+            "<h4>" + esc(t.t) + "</h4><p>" + esc(t.d) + "</p>" +
+            (t.e ? '<div class="ev"><span>Данные</span>' + esc(t.e) + "</div>" : "") +
+            '<div class="foot"><span class="src" title="' + esc(t.s) + (t.p ? ", с. " + esc(t.p) : "") + '">' + esc(t.s) + (t.p ? " · с.&nbsp;" + esc(t.p) : "") + "</span>" +
+            hz(t.h) + '<span class="st">' + esc(ST[t.st] || "") + "</span></div>" +
+            (t.tg.length ? '<div class="tags">' + t.tg.map(function (x) { return '<button class="tag" data-tag="' + esc(x) + '" type="button">' + esc(x) + "</button>"; }).join("") + "</div>" : "");
+          return a;
+        }
+
+        function render() {
+          var host = $("clusters"); host.innerHTML = "";
+          var shown = 0;
+          D.clusters.forEach(function (c) {
+            var ts = D.trends.filter(function (t) { return t.c === c.id && match(t); });
+            if (!ts.length) return;
+            shown += ts.length;
+            var sec = el("section", "cl"); sec.id = "c-" + c.id; sec.style.setProperty("--gc", G[c.g].color);
+            var srcs = {}; ts.forEach(function (t) { srcs[t.s] = 1; });
+            var h = el("div", "clh",
+              glyph(c, "") +
+              '<div><div class="code">' + pad(c.n) + " · " + esc(G[c.g].name) + "</div><h3>" + esc(c.name) + "</h3><p>" + esc(c.line) + "</p></div>" +
+              '<div class="sig"><span class="label">Сигнал · ' + c.sources.length + "/9 отчётов</span>" + meter(c.sources.length) + "</div>");
+            h.querySelector("svg").setAttribute("style", "width:56px;height:56px");
+            sec.appendChild(h);
+            sec.appendChild(el("div", "act", "<b>Делать</b><span>" + esc(c.act) + "</span>"));
+            var grid = el("div", "cards"); sec.appendChild(grid);
+            var lim = filtered() || expanded[c.id] ? ts.length : TOP;
+            ts.slice(0, lim).forEach(function (t) { grid.appendChild(card(t)); });
+            if (ts.length > lim) {
+              var b = el("button", "more", "Показать ещё " + (ts.length - lim));
+              b.type = "button"; b.onclick = function () { expanded[c.id] = true; render(); var s = $("c-" + c.id); if (s) s.scrollIntoView({ block: "start" }); };
+              sec.appendChild(b);
+            }
+            host.appendChild(sec);
+          });
+          $("empty").style.display = shown ? "none" : "block";
+          $("fcount").textContent = (filtered() ? "показано " + shown + " из " : "всего ") + D.trends.length;
+          $("reset").hidden = !filtered();
+        }
+
+        function update() { buildFilters(); render(); }
+
+        $("q").addEventListener("input", function (e) { S.q = e.target.value.trim().toLowerCase(); render(); });
+        $("reset").onclick = function () { S = { g: null, hz: {}, st: {}, src: {}, tag: {}, q: "" }; $("q").value = ""; update(); };
+        $("ftoggle").onclick = function () { $("fbar").classList.toggle("open"); };
+        document.addEventListener("click", function (e) {
+          var t = e.target.closest && e.target.closest(".tag");
+          if (!t) return;
+          var k = t.getAttribute("data-tag"); S.tag[k] = !S.tag[k]; update();
+        });
+
+        // ---------- tensions ----------
+        D.tensions.forEach(function (x) {
+          var a = C[x.a], b = C[x.b], box = el("div", "tn");
+          box.innerHTML =
+            "<h3>" + esc(x.title) + "</h3>" +
+            '<div class="poles"><a class="pole" href="#c-' + a.id + '"><b>' + esc(a.name) + "</b><span>" + a.count + " " + plural(a.count, "тренд", "тренда", "трендов") + "</span></a>" +
+            '<div class="knob"><input type="range" min="0" max="100" value="50" aria-label="' + esc(x.title) + '" /></div>' +
+            '<a class="pole r" href="#c-' + b.id + '"><b>' + esc(b.name) + "</b><span>" + b.count + " " + plural(b.count, "тренд", "тренда", "трендов") + "</span></a></div>" +
+            '<div class="read">в напряжении</div><p>' + esc(x.text) + "</p>";
+          var inp = box.querySelector("input"), pa = box.querySelectorAll(".pole")[0], pb = box.querySelectorAll(".pole")[1], rd = box.querySelector(".read");
+          function sync() {
+            var v = +inp.value;
+            pa.style.opacity = v > 62 ? 0.35 : 1; pb.style.opacity = v < 38 ? 0.35 : 1;
+            rd.textContent = v < 38 ? "→ " + a.name.toLowerCase() : v > 62 ? "→ " + b.name.toLowerCase() : "в напряжении";
+          }
+          inp.addEventListener("input", sync); sync();
+          $("tens").appendChild(box);
+        });
+
+        // ---------- actions ----------
+        var saved = {};
+        try { saved = JSON.parse(localStorage.getItem("trends26-acts") || "{}"); } catch (e) {}
+        D.groups.forEach(function (g) {
+          var box = el("div", "ag"); box.style.setProperty("--gc", g.color);
+          box.appendChild(el("h3", "", "<i></i>" + esc(g.name)));
+          D.clusters.filter(function (c) { return c.g === g.id; }).forEach(function (c) {
+            var l = el("label", "", '<input type="checkbox" /><span><em>' + pad(c.n) + " · " + esc(c.name) + "</em>" + esc(c.act) + "</span>");
+            var cb = l.querySelector("input"); cb.checked = !!saved[c.id];
+            cb.onchange = function () { saved[c.id] = cb.checked; try { localStorage.setItem("trends26-acts", JSON.stringify(saved)); } catch (e) {} };
+            box.appendChild(l);
+          });
+          $("acts").appendChild(box);
+        });
+
+        // ---------- sources ----------
+        D.sources.forEach(function (s) {
+          var n = D.trends.filter(function (t) { return t.s === s; }).length;
+          $("srclist").appendChild(el("li", "", esc(s) + " — " + n + " " + plural(n, "тренд", "тренда", "трендов")));
+        });
+
+        update();
+        if (location.hash) { var t = document.getElementById(location.hash.slice(1)); if (t) setTimeout(function () { t.scrollIntoView(); }, 50); }
+      })();
+    </script>
+  </body>
+</html>
