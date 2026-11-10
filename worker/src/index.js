@@ -1,55 +1,53 @@
 /**
  * vonzvyagin-fitbit-status
  *
- * Раз в N минут тянет данные с Fitbit Air через Google Health API,
+ * Раз в 20 минут тянет данные с WHOOP через официальный WHOOP API v2,
  * считает 3 качественных статуса и кладёт их в KV. Публичный /status.json
- * отдаёт только эти статусы — без сырых чисел пульса/HRV.
+ * отдаёт только эти статусы — без сырых чисел пульса/HRV/strain.
  *
- * Реальный REST-паттерн Google Health API v4:
- *   GET /v4/users/me/dataTypes/{type}/dataPoints
- * Числовые поля в ответе приходят строками (int64 → JSON string).
- * "daily-heart-rate-variability" уже содержит и HRV, и nonRemHeartRateBeatsPerMinute
- * (по сути пульс покоя) — отдельный запрос heart-rate не нужен.
- * Отдельного "readiness"/"cardio load" типа в публичном API нет — готовность
- * считаем сами из HRV + пульса.
+ * WHOOP OAuth: https://api.prod.whoop.com/oauth/oauth2/{auth,token}
+ * Данные: https://api.prod.whoop.com/developer/v2/{recovery,activity/sleep,cycle}
  *
- * Refresh-токен Google живёт 7 дней (приложение в статусе Testing — полная
- * верификация Google для личных однопользовательских приложений вообще
- * недоступна, это подтверждено самим Google). /reconnect — эндпоинт для
- * быстрого переоформления токена в один клик вместо OAuth Playground +
- * Cloudflare dashboard.
+ * ВАЖНО про refresh-токен: в отличие от Google, WHOOP ротирует refresh-токен
+ * при КАЖДОМ обмене — и при /reconnect, и при обычном плановом обновлении
+ * access-токена раз в 20 минут. Поэтому runUpdate() обязан сохранять новый
+ * refresh-токен в KV на каждом цикле, а не только при ручной переавторизации
+ * — иначе через один цикл токен станет недействительным. У WHOOP нет
+ * google-style блокировки верификации для личных приложений, так что раз
+ * получив токен, он должен обновляться бесконечно сам.
+ *
+ * Точные пути полей в ответах (score.recovery_score,
+ * score.sleep_performance_percentage, score.strain) не проверены живым
+ * вызовом — доки противоречивы. Смотри /debug?key=... после первого
+ * реального запуска и поправь pick()-пути при необходимости.
  */
 
-const API_BASE = "https://health.googleapis.com/v4/users/me/dataTypes";
-const TOKEN_URL = "https://oauth2.googleapis.com/token";
-const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+const API_BASE = "https://api.prod.whoop.com/developer/v2";
+const AUTH_URL = "https://api.prod.whoop.com/oauth/oauth2/auth";
+const TOKEN_URL = "https://api.prod.whoop.com/oauth/oauth2/token";
 
-const SCOPES = [
-  "https://www.googleapis.com/auth/googlehealth.sleep.readonly",
-  "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly",
-  "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
-];
+const SCOPES = ["offline", "read:recovery", "read:sleep", "read:cycles"];
 
 const ENDPOINTS = {
-  sleep: { type: "sleep", pageSize: 3 },
-  hrv: { type: "daily-heart-rate-variability", pageSize: 3 },
-  steps: { type: "steps", pageSize: 300 },
+  sleep: "activity/sleep",
+  recovery: "recovery",
+  cycle: "cycle",
 };
 
-// Пороги — стартовые, нуждаются в калибровке под личную норму после недели
-// реальных данных (см. /debug).
+// Пороги — стартовые (ориентированы на опубликованные цветовые зоны WHOOP),
+// нуждаются в калибровке под личную норму после недели реальных данных
+// (см. /debug).
 const CONFIG = {
-  hrvGoodMs: 40,
-  restingHrGoodBpm: 62,
-  sleepGoodMinutes: 420,
-  sleepOkMinutes: 360,
-  sleepGoodEfficiency: 85,
-  energy: { dailyGoalSteps: 6000, goodRatio: 0.8, okRatio: 0.4 },
+  sleepGoodPct: 85,
+  sleepOkPct: 70,
+  recoveryGoodPct: 67,
+  recoveryOkPct: 34,
+  // Strain — накопительная за день метрика (как шаги), поэтому сравниваем
+  // не с абсолютной целью, а с ожидаемым темпом на текущий час.
+  strain: { dailyGoal: 12, goodRatio: 0.8, okRatio: 0.4 },
 };
 
-// Локальный часовой пояс (Москва, без перевода часов) — используется, чтобы
-// сравнивать шаги не с полной дневной нормой, а с ожидаемым темпом на текущий
-// час, иначе бейдж будет «На нуле» весь день до вечера.
+// Локальный часовой пояс (Москва, без перевода часов).
 const LOCAL_UTC_OFFSET_HOURS = 3;
 const ACTIVE_DAY_START_HOUR = 8;
 const ACTIVE_DAY_END_HOUR = 23;
@@ -98,33 +96,29 @@ async function handleReconnect(request, url, env) {
   const state = url.searchParams.get("state");
 
   if (!code) {
-    // Шаг 1: ещё не пришли от Google — проверяем ключ и отправляем на согласие.
     if (url.searchParams.get("key") !== env.DEBUG_KEY) {
       return new Response("not found", { status: 404 });
     }
     const authUrl = new URL(AUTH_URL);
-    authUrl.searchParams.set("client_id", env.GOOGLE_CLIENT_ID);
+    authUrl.searchParams.set("client_id", env.WHOOP_CLIENT_ID);
     authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("access_type", "offline");
-    authUrl.searchParams.set("prompt", "select_account consent");
     authUrl.searchParams.set("scope", SCOPES.join(" "));
     authUrl.searchParams.set("state", env.DEBUG_KEY);
     return Response.redirect(authUrl.toString(), 302);
   }
 
-  // Шаг 2: вернулись от Google с кодом — state должен совпасть с ключом,
-  // иначе это не наш собственный запрос.
   if (state !== env.DEBUG_KEY) {
     return new Response("not found", { status: 404 });
   }
 
   const body = new URLSearchParams({
-    code,
-    client_id: env.GOOGLE_CLIENT_ID,
-    client_secret: env.GOOGLE_CLIENT_SECRET,
-    redirect_uri: redirectUri,
     grant_type: "authorization_code",
+    code,
+    client_id: env.WHOOP_CLIENT_ID,
+    client_secret: env.WHOOP_CLIENT_SECRET,
+    redirect_uri: redirectUri,
+    scope: SCOPES.join(" "),
   });
 
   const res = await fetch(TOKEN_URL, {
@@ -140,7 +134,7 @@ async function handleReconnect(request, url, env) {
   const data = await res.json();
   if (!data.refresh_token) {
     return new Response(
-      "Google didn't return a refresh_token (обычно значит: доступ уже выдавался раньше без force-consent). Попробуй ещё раз.",
+      "WHOOP didn't return a refresh_token — scope 'offline' обязателен, проверь, что он включён в запрос.",
       { status: 502 }
     );
   }
@@ -160,24 +154,29 @@ async function handleReconnect(request, url, env) {
 }
 
 async function runUpdate(env) {
-  const accessToken = await refreshAccessToken(env);
-  const raw = await fetchHealthData(accessToken);
+  const refreshToken = (await env.STATUS_KV.get("refreshToken")) || env.WHOOP_REFRESH_TOKEN;
+  const tokens = await refreshTokens(env, refreshToken);
+
+  // WHOOP ротирует refresh-токен на каждом обновлении — обязательно
+  // сохраняем новый, иначе следующий цикл отвалится с invalid_grant.
+  if (tokens.refresh_token) {
+    await env.STATUS_KV.put("refreshToken", tokens.refresh_token);
+  }
+
+  const raw = await fetchWhoopData(tokens.access_token);
   const status = computeStatus(raw);
 
   await env.STATUS_KV.put("status", JSON.stringify(status));
   await env.STATUS_KV.put("debug:lastRaw", JSON.stringify(raw));
 }
 
-async function refreshAccessToken(env) {
-  // Сначала токен, сохранённый через /reconnect; пока им не пользовались —
-  // падаем обратно на исходный Secret, чтобы переход не сломал текущую работу.
-  const refreshToken = (await env.STATUS_KV.get("refreshToken")) || env.GOOGLE_REFRESH_TOKEN;
-
+async function refreshTokens(env, refreshToken) {
   const body = new URLSearchParams({
-    client_id: env.GOOGLE_CLIENT_ID,
-    client_secret: env.GOOGLE_CLIENT_SECRET,
-    refresh_token: refreshToken,
     grant_type: "refresh_token",
+    refresh_token: refreshToken,
+    client_id: env.WHOOP_CLIENT_ID,
+    client_secret: env.WHOOP_CLIENT_SECRET,
+    scope: "offline",
   });
 
   const res = await fetch(TOKEN_URL, {
@@ -190,16 +189,15 @@ async function refreshAccessToken(env) {
     throw new Error(`token refresh failed: ${res.status} ${await res.text()}`);
   }
 
-  const data = await res.json();
-  return data.access_token;
+  return res.json();
 }
 
-async function fetchHealthData(accessToken) {
+async function fetchWhoopData(accessToken) {
   const raw = {};
 
-  for (const [key, { type, pageSize }] of Object.entries(ENDPOINTS)) {
+  for (const [key, path] of Object.entries(ENDPOINTS)) {
     try {
-      const res = await fetch(`${API_BASE}/${type}/dataPoints?pageSize=${pageSize}`, {
+      const res = await fetch(`${API_BASE}/${path}?limit=5`, {
         headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
       });
       raw[key] = res.ok ? await res.json() : { httpError: res.status, body: await res.text() };
@@ -225,77 +223,64 @@ function toNumber(value) {
   return Number.isNaN(n) ? undefined : n;
 }
 
+// Берёт самую свежую уже просчитанную запись (score_state === "SCORED") —
+// самая последняя запись может быть ещё не обсчитана WHOOP.
+function latestScored(rawResponse) {
+  const records = pick(rawResponse, ["records"]);
+  if (!Array.isArray(records) || records.length === 0) return undefined;
+  return records.find((r) => pick(r, ["score_state"]) === "SCORED") || records[0];
+}
+
 function computeStatus(raw) {
-  const hrv = toNumber(
-    pick(raw.hrv, ["dataPoints.0.dailyHeartRateVariability.averageHeartRateVariabilityMilliseconds"])
+  const sleepRecord = latestScored(raw.sleep);
+  const recoveryRecord = latestScored(raw.recovery);
+  const cycleRecord = latestScored(raw.cycle);
+
+  const sleepPct = toNumber(
+    pick(sleepRecord, ["score.sleep_performance_percentage", "sleep_performance_percentage"])
   );
-  const restingHr = toNumber(
-    pick(raw.hrv, ["dataPoints.0.dailyHeartRateVariability.nonRemHeartRateBeatsPerMinute"])
-  );
-  const steps = sumSteps(raw.steps);
+  const recoveryPct = toNumber(pick(recoveryRecord, ["score.recovery_score", "recovery_score"]));
+  const strain = toNumber(pick(cycleRecord, ["score.strain", "strain"]));
 
   return {
-    sleep: sleepStatus(raw.sleep),
-    readiness: readiness(hrv, restingHr),
-    energy: energyStatus(steps),
+    sleep: sleepStatus(sleepPct),
+    readiness: readiness(recoveryPct),
+    energy: energyStatus(strain),
     updatedAt: new Date().toISOString(),
   };
 }
 
-function sleepStatus(rawSleep) {
-  const summary = pick(rawSleep, ["dataPoints.0.sleep.summary"]);
-  if (!summary) return { label: "Нет данных о сне", level: "unknown" };
-
-  const asleep = toNumber(summary.minutesAsleep);
-  const awake = toNumber(summary.minutesAwake) || 0;
-  const inPeriod = toNumber(summary.minutesInSleepPeriod) || asleep + awake;
-  if (asleep == null) return { label: "Нет данных о сне", level: "unknown" };
-
-  const efficiency = inPeriod ? (asleep / inPeriod) * 100 : null;
-  const efficiencyOk = efficiency == null || efficiency >= CONFIG.sleepGoodEfficiency;
-
-  if (asleep >= CONFIG.sleepGoodMinutes && efficiencyOk) {
-    return { label: "Выспался", level: "good" };
-  }
-  if (asleep >= CONFIG.sleepOkMinutes) {
-    return { label: "Так себе выспался", level: "ok" };
-  }
+function sleepStatus(sleepPct) {
+  if (sleepPct == null) return { label: "Нет данных о сне", level: "unknown" };
+  if (sleepPct >= CONFIG.sleepGoodPct) return { label: "Выспался", level: "good" };
+  if (sleepPct >= CONFIG.sleepOkPct) return { label: "Так себе выспался", level: "ok" };
   return { label: "Не выспался", level: "bad" };
 }
 
-function sumSteps(rawSteps) {
-  const points = pick(rawSteps, ["dataPoints"]);
-  if (!Array.isArray(points) || points.length === 0) return undefined;
-  let total = 0;
-  let found = false;
-  for (const point of points) {
-    // Одни и те же шаги иногда прилетают и с самого Fitbit Air, и с телефона
-    // через Apple Health за то же время — считаем только трекер, чтобы не
-    // задваивать.
-    if (pick(point, ["dataSource.platform"]) !== "FITBIT") continue;
-    const count = toNumber(pick(point, ["steps.count"]));
-    if (count != null) {
-      total += count;
-      found = true;
-    }
+function readiness(recoveryPct) {
+  if (recoveryPct == null) return { label: "Нет данных о готовности", level: "unknown" };
+  if (recoveryPct >= CONFIG.recoveryGoodPct) {
+    return { label: "Готов обсуждать важное", level: "good" };
   }
-  return found ? total : undefined;
+  if (recoveryPct >= CONFIG.recoveryOkPct) {
+    return { label: "Лучше про несрочное", level: "ok" };
+  }
+  return { label: "Сегодня не до серьёзного", level: "bad" };
 }
 
-function energyStatus(steps) {
-  if (steps == null) return { label: "Нет данных об активности", level: "unknown" };
+function energyStatus(strain) {
+  if (strain == null) return { label: "Нет данных об активности", level: "unknown" };
 
   const localHour = getLocalHour();
   const span = ACTIVE_DAY_END_HOUR - ACTIVE_DAY_START_HOUR;
   const elapsed = Math.min(Math.max(localHour - ACTIVE_DAY_START_HOUR, 0), span);
-  // Минимум 1 час, чтобы рано утром не делить на что-то около нуля.
-  const expectedByNow = (CONFIG.energy.dailyGoalSteps * Math.max(elapsed, 1)) / span;
-  const ratio = steps / expectedByNow;
+  const expectedByNow = (CONFIG.strain.dailyGoal * Math.max(elapsed, 1)) / span;
+  const ratio = strain / expectedByNow;
 
-  if (steps >= CONFIG.energy.dailyGoalSteps || ratio >= CONFIG.energy.goodRatio) {
+  if (strain >= CONFIG.strain.dailyGoal || ratio >= CONFIG.strain.goodRatio) {
     return { label: "На ногах весь день", level: "good" };
   }
-  if (ratio >= CONFIG.energy.okRatio) {
+  if (ratio >= CONFIG.strain.okRatio) {
     return { label: "Хожу, но не рекорд", level: "ok" };
   }
   return { label: "Почти не вставал из-за стола", level: "bad" };
@@ -306,17 +291,6 @@ function getLocalHour() {
   let hour = now.getUTCHours() + now.getUTCMinutes() / 60 + LOCAL_UTC_OFFSET_HOURS;
   if (hour >= 24) hour -= 24;
   return hour;
-}
-
-function readiness(hrv, restingHr) {
-  if (hrv == null && restingHr == null) {
-    return { label: "Нет данных о готовности", level: "unknown" };
-  }
-  const hrvOk = hrv == null || hrv >= CONFIG.hrvGoodMs;
-  const hrOk = restingHr == null || restingHr <= CONFIG.restingHrGoodBpm;
-  if (hrvOk && hrOk) return { label: "Готов обсуждать важное", level: "good" };
-  if (hrvOk || hrOk) return { label: "Лучше про несрочное", level: "ok" };
-  return { label: "Сегодня не до серьёзного", level: "bad" };
 }
 
 function jsonResponse(data, status = 200, cors = true) {

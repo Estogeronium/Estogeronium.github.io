@@ -7,11 +7,11 @@
 - `index.html` — вся страница (стили инлайн)
 - `portrait.jpg` — портрет (1000×1000, ~124 КБ)
 - `favicon.svg`
-- `privacy.html` — политика конфиденциальности (для Google OAuth verification и вообще)
+- `privacy.html` — политика конфиденциальности
 - `CNAME` — домен `vonzvyagin.ru` для GitHub Pages
 - `worker/` — Cloudflare Worker, который тянет статус (сон/готовность/энергия)
-  из Google Health API (Fitbit Air) и отдаёт его блоку на главной странице.
-  Деплоится отдельно от Pages, см. `worker/README.md`.
+  из WHOOP API и отдаёт его блоку на главной странице. Деплоится отдельно от
+  Pages, см. `worker/README.md`.
 
 ## Как добавить проект
 
