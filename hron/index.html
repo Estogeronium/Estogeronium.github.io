@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Хрон — хронометраж текста для озвучки</title>
+    <meta
+      name="description"
+      content="Считает, сколько секунд займёт текст в озвучке: с числами, процентами, датами, телефонами, валютами и аббревиатурами. Плюс символы с пробелами и без."
+    />
+
+    <!-- Google Analytics (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3VNVNX5CCX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-3VNVNX5CCX");
+    </script>
+
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#f4f4f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111116" media="(prefers-color-scheme: dark)" />
+
+    <link rel="canonical" href="https://hron.vonzvyagin.ru/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hron.vonzvyagin.ru/" />
+    <meta property="og:title" content="Хрон — хронометраж текста для озвучки" />
+    <meta
+      property="og:description"
+      content="Сколько секунд займёт текст: с числами, процентами, датами, телефонами и аббревиатурами."
+    />
+    <meta name="twitter:card" content="summary" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Spectral:wght@500;600&display=swap"
+    />
+
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f4f4f7;
+        --card: #ffffff;
+        --ink: #1a1a23;
+        --ink-2: #54545f;
+        --muted: #8b8b98;
+        --accent: #5b5bd6;
+        --accent-soft: rgba(91, 91, 214, 0.12);
+        --warn: #c2410c;
+        --warn-soft: rgba(194, 65, 12, 0.1);
+        --line: rgba(20, 20, 45, 0.1);
+        --line-2: rgba(20, 20, 45, 0.06);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #111116;
+          --card: #1a1a21;
+          --ink: #ececf1;
+          --ink-2: #b4b4c0;
+          --muted: #7d7d8c;
+          --accent: #8f8ff0;
+          --accent-soft: rgba(143, 143, 240, 0.16);
+          --warn: #fb923c;
+          --warn-soft: rgba(251, 146, 60, 0.14);
+          --line: rgba(255, 255, 255, 0.1);
+          --line-2: rgba(255, 255, 255, 0.06);
+        }
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+        min-height: 100svh;
+        padding: 44px 20px 36px;
+      }
+      main {
+        max-width: 1040px;
+        margin: 0 auto;
+        animation: rise 0.45s ease;
+      }
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        main {
+          animation: none;
+        }
+      }
+
+      header {
+        margin-bottom: 26px;
+      }
+      h1 {
+        font-family: "Spectral", Georgia, serif;
+        font-weight: 600;
+        font-size: 30px;
+        letter-spacing: -0.01em;
+        margin-bottom: 6px;
+      }
+      .lead {
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--ink-2);
+        max-width: 560px;
+        text-wrap: pretty;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 18px;
+        align-items: start;
+      }
+      @media (max-width: 860px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line-2);
+        border-radius: 18px;
+      }
+
+      /* Поле ввода */
+      .editor {
+        display: flex;
+        flex-direction: column;
+        min-height: 360px;
+      }
+      textarea {
+        flex: 1 0 auto;
+        width: 100%;
+        min-height: 320px;
+        resize: vertical;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--ink);
+        font: inherit;
+        font-size: 17px;
+        line-height: 1.62;
+        padding: 22px 24px 12px;
+        border-radius: 18px 18px 0 0;
+      }
+      textarea::placeholder {
+        color: var(--muted);
+      }
+      .editor:focus-within {
+        border-color: var(--accent-soft);
+        box-shadow: 0 0 0 3px var(--accent-soft);
+      }
+      .editor-bar {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 10px 16px 12px 24px;
+        border-top: 1px solid var(--line-2);
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .editor-bar .spacer {
+        flex: 1;
+      }
+      .ghost {
+        border: 0;
+        background: none;
+        font: inherit;
+        font-size: 13px;
+        color: var(--ink-2);
+        cursor: pointer;
+        padding: 6px 8px;
+        border-radius: 8px;
+        transition: color 0.15s ease, background 0.15s ease;
+      }
+      .ghost:hover {
+        color: var(--accent);
+        background: var(--accent-soft);
+      }
+      .ghost:focus-visible,
+      .seg button:focus-visible,
+      .chip:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      /* Панель результата */
+      .panel {
+        position: sticky;
+        top: 20px;
+        padding: 22px 22px 18px;
+      }
+      .time {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        font-variant-numeric: tabular-nums;
+      }
+      .time b {
+        font-size: 64px;
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: -0.035em;
+      }
+      .time span {
+        font-size: 18px;
+        color: var(--muted);
+      }
+      .time-sub {
+        margin-top: 8px;
+        font-size: 13px;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+        min-height: 18px;
+      }
+
+      .fit {
+        margin-top: 18px;
+      }
+      .chips {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+      }
+      .chip {
+        font: inherit;
+        font-size: 12.5px;
+        font-variant-numeric: tabular-nums;
+        border: 1px solid var(--line);
+        color: var(--ink-2);
+        background: transparent;
+        padding: 5px 0;
+        white-space: nowrap;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .chip:hover {
+        border-color: var(--accent);
+      }
+      .chip.over {
+        color: var(--muted);
+        text-decoration: line-through;
+        text-decoration-color: var(--line);
+      }
+      .chip.on {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+        text-decoration: none;
+      }
+      .chip.on.bad {
+        background: var(--warn);
+        border-color: var(--warn);
+      }
+      .bar {
+        position: relative;
+        height: 6px;
+        border-radius: 999px;
+        background: var(--line-2);
+        margin: 14px 0 8px;
+        overflow: hidden;
+      }
+      .bar i {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0;
+        background: var(--accent);
+        border-radius: 999px;
+        transition: width 0.2s ease, background 0.2s ease;
+      }
+      .bar.bad i {
+        background: var(--warn);
+      }
+      .fit-text {
+        font-size: 13px;
+        color: var(--ink-2);
+        min-height: 18px;
+      }
+      .fit-text.bad {
+        color: var(--warn);
+      }
+
+      .label {
+        font-size: 10.5px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.11em;
+        color: var(--muted);
+        margin-bottom: 9px;
+      }
+      .block {
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 1px solid var(--line-2);
+      }
+
+      .seg {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        background: var(--line-2);
+        border-radius: 10px;
+        padding: 3px;
+        gap: 2px;
+      }
+      .seg button {
+        border: 0;
+        background: transparent;
+        font: inherit;
+        font-size: 12.5px;
+        color: var(--ink-2);
+        padding: 7px 2px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--card);
+        color: var(--ink);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+      }
+      .rate {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 12px;
+        font-size: 12.5px;
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+      .rate input {
+        flex: 1;
+        accent-color: var(--accent);
+      }
+      .rate output {
+        min-width: 74px;
+        text-align: right;
+        color: var(--ink-2);
+      }
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        font-size: 12.5px;
+        color: var(--ink-2);
+        cursor: pointer;
+        user-select: none;
+      }
+      .toggle input {
+        accent-color: var(--accent);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px 12px;
+      }
+      .stat b {
+        display: block;
+        font-size: 20px;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.01em;
+      }
+      .stat span {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      /* Как прочитает диктор */
+      .spoken {
+        grid-column: 1 / -1;
+        padding: 20px 24px 22px;
+      }
+      .spoken-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .spoken-head .label {
+        margin: 0;
+        white-space: nowrap;
+      }
+      .spoken-head .count {
+        white-space: nowrap;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .spoken-head .spacer {
+        flex: 1;
+      }
+      .spoken-text {
+        font-size: 16px;
+        line-height: 1.75;
+        color: var(--ink-2);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .spoken-text:empty::before {
+        content: "Здесь появится текст так, как его прочитает диктор: цифры словами, знаки и сокращения расшифрованы.";
+        color: var(--muted);
+      }
+      .spoken-text mark {
+        background: var(--accent-soft);
+        color: var(--ink);
+        border-radius: 5px;
+        padding: 1px 3px;
+        cursor: help;
+      }
+      .spoken-text del {
+        color: var(--muted);
+        text-decoration: line-through;
+        opacity: 0.7;
+      }
+
+      footer {
+        margin-top: 26px;
+        font-size: 12.5px;
+        line-height: 1.6;
+        color: var(--muted);
+        max-width: 720px;
+      }
+      footer a {
+        color: var(--ink-2);
+        text-decoration: none;
+      }
+      footer a:hover {
+        color: var(--accent);
+      }
+      details summary {
+        cursor: pointer;
+        color: var(--ink-2);
+        margin-bottom: 6px;
+      }
+      details p {
+        margin-bottom: 8px;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        transform: translate(-50%, 12px);
+        background: var(--ink);
+        color: var(--bg);
+        font-size: 13px;
+        padding: 9px 14px;
+        border-radius: 10px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      @media (max-width: 860px) {
+        body {
+          padding: 28px 16px 28px;
+        }
+        .panel {
+          position: static;
+        }
+        .time b {
+          font-size: 54px;
+        }
+        textarea {
+          min-height: 220px;
+          font-size: 16px;
+          padding: 18px 18px 10px;
+        }
+        .editor {
+          min-height: 0;
+        }
+        .editor-bar {
+          padding-left: 18px;
+        }
+        .spoken {
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Хрон</h1>
+        <p class="lead">
+          Сколько секунд займёт текст в озвучке. Числа, проценты, даты, телефоны, валюты и аббревиатуры
+          считаются так, как их произнесёт диктор.
+        </p>
+      </header>
+
+      <div class="layout">
+        <section class="card editor" aria-label="Текст">
+          <textarea
+            id="text"
+            spellcheck="true"
+            placeholder="Вставьте текст ролика…"
+            aria-label="Текст для озвучки"
+          ></textarea>
+          <div class="editor-bar">
+            <span id="words-inline">0 слов</span>
+            <span class="spacer"></span>
+            <button class="ghost" id="sample" type="button">Пример</button>
+            <button class="ghost" id="clear" type="button">Очистить</button>
+          </div>
+        </section>
+
+        <aside class="card panel" aria-live="polite">
+          <div class="time"><b id="sec">0</b><span>сек</span></div>
+          <div class="time-sub" id="sec-sub"></div>
+
+          <div class="fit">
+            <div class="chips" id="chips" role="group" aria-label="Длина ролика"></div>
+            <div class="bar" id="bar"><i></i></div>
+            <div class="fit-text" id="fit-text"></div>
+          </div>
+
+          <div class="block">
+            <div class="label">Темп</div>
+            <div class="seg" id="presets" role="group" aria-label="Темп чтения"></div>
+            <label class="rate">
+              <input id="rate" type="range" min="3" max="10" step="0.1" value="5" aria-label="Слогов в секунду" />
+              <output id="rate-out">5,0 сл/с</output>
+            </label>
+            <label class="toggle"><input type="checkbox" id="pauses" checked /> Учитывать паузы</label>
+          </div>
+
+          <div class="block">
+            <div class="stats">
+              <div class="stat"><b id="c-all">0</b><span>символов с пробелами</span></div>
+              <div class="stat"><b id="c-nosp">0</b><span>без пробелов</span></div>
+              <div class="stat"><b id="c-words">0</b><span>слов</span></div>
+              <div class="stat"><b id="c-syl">0</b><span>слогов в озвучке</span></div>
+            </div>
+          </div>
+        </aside>
+
+        <section class="card spoken" aria-label="Как прочитает диктор">
+          <div class="spoken-head">
+            <div class="label">Как прочитает диктор</div>
+            <span class="count" id="repl"></span>
+            <span class="spacer"></span>
+            <button class="ghost" id="copy" type="button">Скопировать</button>
+          </div>
+          <div class="spoken-text" id="spoken"></div>
+        </section>
+      </div>
+
+      <footer>
+        <details>
+          <summary>Как считается</summary>
+          <p>
+            Текст сначала переводится в то, что прозвучит вслух: «15%» — «пятнадцать процентов»,
+            «8 800 555-35-35» — «восемь, восемьсот, пятьсот пятьдесят пять…», «до 30.11» — «до тридцатого»,
+            «МГУ» — «эм-гэ-у», «т.е.» — «то есть». Числа согласуются с предлогами и единицами.
+          </p>
+          <p>
+            Потом считаются слоги — в русском это гласные. Слог точнее слова: «и» и «высокотехнологичный» —
+            оба одно слово, но звучат очень по-разному. Время = слоги ÷ темп + паузы на запятых, точках и
+            абзацах.
+          </p>
+          <p>
+            Темп по умолчанию — 5 слогов в секунду: на обычном тексте без цифр это совпадает с классическим правилом «2 слова = 1 секунда». Под конкретного диктора
+            подкрутите ползунок: засеките его на эталонном тексте и подберите значение, при котором совпадёт.
+          </p>
+        </details>
+        <p style="margin-top: 14px">
+          Текст никуда не отправляется — всё считается в браузере.
+          <a href="https://vonzvyagin.ru">Женя Звягин</a>
+        </p>
+      </footer>
+    </main>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="hron.js"></script>
+    <script>
+      (function () {
+        "use strict";
+        const $ = (id) => document.getElementById(id);
+        const ta = $("text");
+
+        const PRESETS = [
+          { name: "Спокойно", rate: 4.2 },
+          { name: "Обычно", rate: 5 },
+          { name: "Быстро", rate: 6 },
+          { name: "Дисклеймер", rate: 8 },
+        ];
+        const FORMATS = [5, 10, 15, 20, 30, 45, 60];
+
+        const SAMPLE =
+          "Только до 30 ноября — скидки до 50% на всю технику в «Ромашке»!\n" +
+          "Смартфоны от 9 990 ₽, ноутбуки в рассрочку на 12 мес. без переплаты.\n" +
+          "Доставка 1–2 дня, бесплатно от 3 000 руб. Подробности на romashka.ru и по телефону 8 800 555-35-35.\n" +
+          "Акция действует с 1.11.2026 по 30.11.2026, кол-во товара ограничено. Не является офертой.";
+
+        const store = {
+          get(k) {
+            try { return localStorage.getItem("hron:" + k); } catch (e) { return null; }
+          },
+          set(k, v) {
+            try { localStorage.setItem("hron:" + k, v); } catch (e) {}
+          },
+        };
+
+        let rate = parseFloat(store.get("rate")) || 5;
+        let target = parseInt(store.get("target"), 10) || 0; // 0 — автоподбор
+        let usePauses = store.get("pauses") !== "0";
+
+        const nf1 = new Intl.NumberFormat("ru-RU", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        const nf0 = new Intl.NumberFormat("ru-RU");
+        const plural = (n, a, b, c) => {
+          const x = Math.abs(n) % 100, y = x % 10;
+          if (x > 10 && x < 20) return c;
+          if (y > 1 && y < 5) return b;
+          if (y === 1) return a;
+          return c;
+        };
+        const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+        // Пресеты темпа
+        const presetBox = $("presets");
+        PRESETS.forEach((p) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.textContent = p.name;
+          b.title = nf1.format(p.rate) + " слога в секунду";
+          b.addEventListener("click", () => setRate(p.rate));
+          presetBox.appendChild(b);
+        });
+
+        // Форматы роликов
+        const chipBox = $("chips");
+        FORMATS.forEach((f) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "chip";
+          b.dataset.f = f;
+          b.textContent = f + " с";
+          b.addEventListener("click", () => {
+            target = target === f ? 0 : f;
+            store.set("target", target);
+            render();
+          });
+          chipBox.appendChild(b);
+        });
+
+        function setRate(r) {
+          rate = Math.round(r * 10) / 10;
+          $("rate").value = rate;
+          store.set("rate", rate);
+          render();
+        }
+        $("rate").addEventListener("input", (e) => setRate(parseFloat(e.target.value)));
+        $("pauses").checked = usePauses;
+        $("pauses").addEventListener("change", (e) => {
+          usePauses = e.target.checked;
+          store.set("pauses", usePauses ? "1" : "0");
+          render();
+        });
+
+        // Поле растёт вместе с текстом
+        function grow() {
+          ta.style.height = "auto";
+          ta.style.height = Math.min(ta.scrollHeight + 2, window.innerHeight * 0.75) + "px";
+        }
+        let t;
+        ta.addEventListener("input", grow);
+        ta.addEventListener("input", () => {
+          clearTimeout(t);
+          t = setTimeout(() => {
+            store.set("text", ta.value);
+            render();
+          }, 60);
+        });
+        $("sample").addEventListener("click", () => {
+          ta.value = SAMPLE;
+          store.set("text", ta.value);
+          grow();
+          render();
+          ta.focus();
+        });
+        $("clear").addEventListener("click", () => {
+          ta.value = "";
+          store.set("text", "");
+          grow();
+          render();
+          ta.focus();
+        });
+
+        let lastSpoken = "";
+        $("copy").addEventListener("click", async () => {
+          if (!lastSpoken.trim()) return toast("Пока нечего копировать");
+          try {
+            await navigator.clipboard.writeText(lastSpoken.trim());
+            toast("Текст для диктора скопирован");
+          } catch (e) {
+            toast("Не получилось скопировать");
+          }
+        });
+
+        let toastT;
+        function toast(msg) {
+          const el = $("toast");
+          el.textContent = msg;
+          el.classList.add("show");
+          clearTimeout(toastT);
+          toastT = setTimeout(() => el.classList.remove("show"), 1600);
+        }
+
+        function fmtSec(s) {
+          if (s < 10) return nf1.format(s);
+          return nf1.format(s);
+        }
+        function mmss(s) {
+          const r = Math.round(s);
+          return Math.floor(r / 60) + ":" + String(r % 60).padStart(2, "0");
+        }
+
+        function render() {
+          const text = ta.value;
+          const r = Hron.analyze(text, rate, { noPauses: !usePauses });
+          const sec = r.seconds;
+          lastSpoken = r.spoken;
+
+          $("sec").textContent = text.trim() ? fmtSec(sec) : "0";
+          $("sec-sub").textContent = text.trim()
+            ? (sec >= 60 ? mmss(sec) + " · " : "") +
+              "речь " + nf1.format(r.speechSec) + " с" +
+              (usePauses ? " + паузы " + nf1.format(r.pauseSec) + " с" : "")
+            : "";
+
+          // Формат: выбранный вручную или ближайший подходящий
+          const auto = FORMATS.find((f) => sec <= f) || FORMATS[FORMATS.length - 1];
+          const f = target || auto;
+          const bad = sec > f;
+          [...chipBox.children].forEach((c) => {
+            const v = +c.dataset.f;
+            c.classList.toggle("on", v === f && !!text.trim());
+            c.classList.toggle("bad", v === f && bad);
+            c.classList.toggle("over", !!text.trim() && sec > v && v !== f);
+            c.setAttribute("aria-pressed", String(v === target));
+          });
+          const bar = $("bar");
+          bar.firstElementChild.style.width = text.trim() ? Math.min(100, (sec / f) * 100) + "%" : "0";
+          bar.classList.toggle("bad", bad);
+          const ft = $("fit-text");
+          ft.classList.toggle("bad", bad && !!text.trim());
+          if (!text.trim()) ft.textContent = "Выберите длину ролика или вставьте текст";
+          else if (bad) ft.textContent = "Длиннее " + f + " с на " + nf1.format(sec - f) + " с — сократите ~" + nf0.format(Math.ceil((sec - f) * rate)) + " " + plural(Math.ceil((sec - f) * rate), "слог", "слога", "слогов");
+          else ft.textContent = "Влезает в " + f + " с · запас " + nf1.format(f - sec) + " с";
+
+          // Пресеты
+          [...presetBox.children].forEach((b, i) => b.setAttribute("aria-pressed", String(PRESETS[i].rate === rate)));
+          $("rate-out").textContent = nf1.format(rate) + " сл/с";
+
+          // Счётчики
+          $("c-all").textContent = nf0.format(r.chars);
+          $("c-nosp").textContent = nf0.format(r.charsNoSpaces);
+          $("c-words").textContent = nf0.format(r.words);
+          $("c-syl").textContent = nf0.format(r.syllables);
+          $("words-inline").textContent = nf0.format(r.words) + " " + plural(r.words, "слово", "слова", "слов");
+
+          // Как прочитает диктор
+          let html = "";
+          for (const s of r.segments) {
+            if (s.src === undefined) html += esc(s.t);
+            else if (!s.t.trim()) html += s.src.trim() ? '<del title="не читается">' + esc(s.src) + "</del>" : esc(s.src);
+            else html += '<mark title="' + esc(s.src) + '">' + esc(s.t) + "</mark>";
+          }
+          $("spoken").innerHTML = text.trim() ? html : "";
+          $("repl").textContent = r.replacements ? r.replacements + " " + plural(r.replacements, "замена", "замены", "замен") : "";
+        }
+
+        ta.value = store.get("text") || "";
+        $("rate").value = rate;
+        grow();
+        render();
+      })();
+    </script>
+  </body>
+</html>
